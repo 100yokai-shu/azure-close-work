@@ -1039,20 +1039,20 @@
           <div class="inline-fields">
             <label>売上
               <span class="with-unit">
-                <input id="salesAmount" type="number" inputmode="numeric" min="0">
+                <input id="salesAmount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
                 <span class="unit">円</span>
               </span>
             </label>
             <label>客数
               <span class="with-unit">
-                <input id="guestCount" type="number" inputmode="numeric" min="0">
+                <input id="guestCount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
                 <span class="unit">名</span>
               </span>
             </label>
           </div>
           <label>レジ内現金
             <span class="with-unit">
-              <input id="cashAmount" type="number" inputmode="numeric" min="0">
+              <input id="cashAmount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
               <span class="unit">円</span>
             </span>
           </label>
@@ -1546,10 +1546,10 @@
               ` : `
                 <label class="stock-row">
                   <span class="stock-name">${escapeHtml(item.name)}</span>
-                  <input type="number" step="0.1" inputmode="decimal" data-stock="${item.id}" value="${escapeHtml(state.inventory[item.id] ?? "")}">
+                  <input type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" data-stock="${item.id}" value="${escapeHtml(state.inventory[item.id] ?? "")}">
                   <span class="unit">${escapeHtml(item.unit)}</span>
                   <span class="gram-cell ${item.grams ? "" : "empty"}">
-                    <input type="number" inputmode="decimal" data-gram="${item.id}" value="${escapeHtml(state.grams[item.id] ?? "")}">
+                    <input type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" data-gram="${item.id}" value="${escapeHtml(state.grams[item.id] ?? "")}">
                     <span class="unit">g</span>
                   </span>
                 </label>
