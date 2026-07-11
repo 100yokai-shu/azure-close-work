@@ -1,0 +1,2464 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A/ZURE CLOSE WORK</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #432f2f;
+      --muted: #6a5b5b;
+      --line: #c8c7c1;
+      --panel: #ffffff;
+      --paper: #f4f3ee;
+      --base: #432f2f;
+      --sub: #dddcd6;
+      --accent: #f39800;
+      --accent-dark: #c97800;
+      --warn: #b94a35;
+      --gold: #f39800;
+      --soft: #fff3dc;
+      --sand-soft: #dddcd6;
+      --shadow: 0 12px 35px rgba(67, 47, 47, .14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { border: 0; cursor: pointer; }
+
+    .app {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 34px;
+    }
+
+    .app-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 18px;
+      align-items: center;
+      min-height: 92px;
+      margin-bottom: 16px;
+      padding: 18px 20px;
+      position: relative;
+      background: var(--base);
+      border: 1px solid #2f2020;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 4vw, 2.4rem);
+      line-height: 1.15;
+      letter-spacing: 0;
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .header-title {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+      grid-column: 2;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      justify-self: end;
+      grid-column: 3;
+    }
+
+    .icon-button,
+    .primary-button,
+    .sub-button,
+    .ghost-button {
+      min-height: 42px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      transition: transform .12s ease, background .12s ease, color .12s ease;
+      white-space: nowrap;
+    }
+
+    .icon-button {
+      width: 42px;
+      padding: 0;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .menu-wrap {
+      position: relative;
+      z-index: 20;
+    }
+
+    .menu-button {
+      width: 45px;
+      height: 45px;
+      padding: 0;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: #fffaf2;
+      border: 2px solid #fff;
+      box-shadow: 0 14px 26px rgba(243, 152, 0, .24);
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .menu-button[aria-expanded="true"] {
+      transform: translateY(2px) scale(.96);
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(243, 152, 0, .28);
+    }
+
+    .menu-button:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    .menu-button span {
+      position: relative;
+      width: 27px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--accent);
+      display: block;
+      transition: background .18s ease;
+    }
+
+    .menu-button span::before,
+    .menu-button span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 27px;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: transform .18s ease, top .18s ease;
+    }
+
+    .menu-button span::before {
+      top: -8px;
+    }
+
+    .menu-button span::after {
+      top: 8px;
+    }
+
+    .menu-button[aria-expanded="true"] span {
+      background: transparent;
+    }
+
+    .menu-button[aria-expanded="true"] span::before {
+      top: 0;
+      transform: rotate(45deg);
+    }
+
+    .menu-button[aria-expanded="true"] span::after {
+      top: 0;
+      transform: rotate(-45deg);
+    }
+
+    .menu-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 170px;
+      max-width: min(260px, calc(100vw - 32px));
+      padding: 8px;
+      display: none;
+      gap: 6px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+
+    .menu-panel.open {
+      display: grid;
+      animation: menu-pop .18s ease both;
+    }
+
+    @keyframes menu-pop {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .menu-button,
+      .menu-button span,
+      .menu-button span::before,
+      .menu-button span::after {
+        transition: none;
+      }
+
+      .menu-panel.open {
+        animation: none;
+      }
+    }
+
+    .menu-panel button {
+      width: 100%;
+      min-height: 38px;
+      border-radius: 7px;
+      padding: 0 10px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      font-weight: 750;
+    }
+
+    .menu-panel button:hover {
+      background: var(--soft);
+      color: var(--accent-dark);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(22, 32, 31, .36);
+    }
+
+    .modal-backdrop.open {
+      display: grid;
+    }
+
+    .modal {
+      width: min(440px, 100%);
+      max-height: min(680px, calc(100vh - 36px));
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--sand-soft);
+    }
+
+    .modal-head h2 {
+      margin: 0;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .modal-body {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .add-employee {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .employee-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .settings-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .settings-list.in-card {
+      padding: 10px;
+    }
+
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .settings-row.stock-setting-row {
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+    }
+
+    .settings-row.dragging {
+      position: relative;
+      border: 2px dashed rgba(243, 152, 0, .5);
+      background: rgba(243, 152, 0, .08);
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .settings-row.dragging > * {
+      opacity: 0;
+    }
+
+    .settings-row.insert-before,
+    .settings-row.insert-after {
+      position: relative;
+    }
+
+    .settings-row.insert-before::before,
+    .settings-row.insert-after::after {
+      content: "";
+      display: block;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(243, 152, 0, .16);
+      grid-column: 1 / -1;
+    }
+
+    .settings-row.insert-before::before {
+      margin-bottom: 8px;
+    }
+
+    .settings-row.insert-after::after {
+      margin-top: 8px;
+    }
+
+    .settings-row.add-row {
+      background: #fff8eb;
+      border-color: rgba(243, 152, 0, .48);
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .settings-row.add-row label {
+      color: var(--accent-dark);
+    }
+
+    .settings-row.add-row input {
+      border-color: rgba(243, 152, 0, .42);
+      background: #fffdf8;
+    }
+
+    .settings-fields {
+      display: grid;
+      gap: 8px;
+    }
+
+    .employee-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .employee-name {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .small-button {
+      min-height: 34px;
+      border-radius: 7px;
+      padding: 0 10px;
+      background: var(--soft);
+      color: var(--accent-dark);
+      font-weight: 800;
+    }
+
+    .small-button.danger {
+      background: #fff1ed;
+      color: var(--warn);
+    }
+
+    .empty-text {
+      color: var(--muted);
+      font-weight: 700;
+      padding: 10px 0;
+    }
+
+    .helper-text {
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .primary-button {
+      background: var(--accent);
+      color: white;
+      font-weight: 800;
+    }
+
+    .sub-button {
+      background: var(--sub);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-weight: 800;
+    }
+
+    .ghost-button {
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .icon-button:hover,
+    .primary-button:hover,
+    .sub-button:hover,
+    .ghost-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-button:hover { background: var(--accent-dark); }
+    .sub-button:hover { background: #d1d0ca; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    aside, main { min-width: 0; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      padding: 16px;
+      position: sticky;
+      top: 14px;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: .84rem;
+      font-weight: 800;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 11px 12px;
+      outline: 0;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 104px;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(243, 152, 0, .24);
+    }
+
+    .inline-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .with-unit {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .unit {
+      color: var(--muted);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .summary {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .progress {
+      height: 12px;
+      border-radius: 999px;
+      background: #e6e4dd;
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      background: var(--accent);
+      transition: width .18s ease;
+    }
+
+    .meter {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: .92rem;
+    }
+
+    .status {
+      margin-top: 12px;
+      min-height: 22px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: .9rem;
+    }
+
+    .status.complete { color: var(--accent-dark); }
+    .status.warning { color: var(--warn); }
+
+    .content {
+      display: grid;
+      gap: 14px;
+    }
+
+    .section {
+      overflow: hidden;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--sand-soft);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--accent-dark);
+      padding: 5px 9px;
+      font-size: .78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .items {
+      display: grid;
+    }
+
+    .item-button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 11px;
+      align-items: center;
+      text-align: left;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      min-height: 64px;
+      color: var(--ink);
+    }
+
+    .item-button:last-child { border-bottom: 0; }
+    .item-button.done { background: #fff8eb; }
+
+    .check {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      border: 2px solid #c8c7c1;
+      background: #fff;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+    }
+
+    .item-button.done .check {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .item-title {
+      display: block;
+      font-weight: 800;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .item-note {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+
+    .inventory-groups {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .stock-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .stock-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      background: var(--sand-soft);
+      border-bottom: 1px solid var(--line);
+      font-weight: 900;
+    }
+
+    .settings-card .stock-head {
+      border-bottom: 0;
+    }
+
+    .settings-card.open .stock-head {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stock-head-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stock-head-title {
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+      gap: 9px;
+    }
+
+    .stock-head-title > span {
+      overflow-wrap: anywhere;
+    }
+
+    .settings-card.dragging {
+      position: relative;
+      border: 2px dashed rgba(243, 152, 0, .5);
+      background: rgba(243, 152, 0, .08);
+      box-shadow: inset 4px 0 0 var(--accent);
+    }
+
+    .settings-card.dragging > * {
+      opacity: 0;
+    }
+
+    .settings-card.insert-before,
+    .settings-card.insert-after {
+      position: relative;
+    }
+
+    .settings-card.insert-before::before,
+    .settings-card.insert-after::after {
+      content: "";
+      display: block;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(243, 152, 0, .16);
+    }
+
+    .settings-card.insert-before::before {
+      margin-bottom: 8px;
+    }
+
+    .settings-card.insert-after::after {
+      margin-top: 8px;
+    }
+
+    .drag-floating-card {
+      position: fixed;
+      z-index: 80;
+      pointer-events: none;
+      box-shadow: 0 16px 32px rgba(67, 47, 47, .24);
+      opacity: .96;
+    }
+
+    body.dragging-stock {
+      user-select: none;
+      cursor: grabbing;
+    }
+
+    .drag-handle {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      cursor: grab;
+      font-size: 1.1rem;
+      font-weight: 900;
+      line-height: 1;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .collapse-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 1.1rem;
+      font-weight: 900;
+      transition: transform .16s ease, background .16s ease;
+    }
+
+    .collapse-button::before {
+      content: "⌄";
+      line-height: 1;
+      display: block;
+      transform: translateY(-1px);
+      transition: transform .16s ease;
+    }
+
+    .settings-card.open .collapse-button::before {
+      transform: rotate(180deg) translateY(1px);
+    }
+
+    .settings-panel {
+      display: none;
+    }
+
+    .settings-card.open .settings-panel {
+      display: grid;
+    }
+
+    .edit-icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: inline-grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--ink);
+    }
+
+    .edit-icon-button svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .group-edit-panel {
+      display: none;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .group-edit-panel.open {
+      display: block;
+    }
+
+    .stock-list {
+      display: grid;
+    }
+
+    .stock-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) 108px 42px minmax(80px, 120px);
+      gap: 8px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stock-row:last-child { border-bottom: 0; }
+
+    .stock-name {
+      font-weight: 750;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .stock-row input {
+      text-align: right;
+      padding: 9px 10px;
+    }
+
+    .photo-row {
+      grid-template-columns: minmax(130px, 1fr) minmax(180px, 2fr);
+    }
+
+    .photo-control {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .stock-row .photo-input {
+      width: 100%;
+      text-align: left;
+      padding: 9px 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+    }
+
+    .photo-preview {
+      display: grid;
+      grid-template-columns: 72px 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff8eb;
+    }
+
+    .photo-preview img {
+      width: 72px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .photo-meta {
+      color: var(--muted);
+      font-size: .82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .gram-cell {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .gram-cell.empty { visibility: hidden; }
+
+    .memo-panel {
+      padding: 15px 16px 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .app-header, .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .header-title,
+      .actions {
+        grid-column: 1;
+      }
+
+      .actions {
+        justify-content: flex-end;
+        justify-self: stretch;
+      }
+      .sidebar { position: static; }
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        width: min(100% - 18px, 1180px);
+        padding-top: 12px;
+      }
+
+      .app-header {
+        padding: 16px;
+      }
+
+      .inline-fields {
+        grid-template-columns: 1fr;
+      }
+
+      .item-button {
+        grid-template-columns: 34px 1fr;
+      }
+
+      .stock-row {
+        grid-template-columns: 1fr 88px 34px;
+      }
+
+      .photo-row,
+      .photo-preview {
+        grid-template-columns: 1fr;
+      }
+
+      .gram-cell {
+        grid-column: 2 / 4;
+      }
+
+      .gram-cell.empty {
+        display: none;
+      }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .app { width: 100%; padding: 0; }
+      .actions, .primary-button, .sub-button, .ghost-button, .icon-button, .menu-button { display: none !important; }
+      .app-header, .layout { display: block; }
+      .sidebar, .panel, .section { box-shadow: none; border-color: #999; }
+      .sidebar { position: static; margin-bottom: 12px; }
+      .content { gap: 10px; }
+      .item-button, .stock-row { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="header-title">
+        <h1 id="titleText">A/ZURE CLOSE WORK</h1>
+      </div>
+      <div class="actions" aria-label="操作">
+        <button class="sub-button" id="resetButton" type="button">リセット</button>
+        <button class="primary-button" id="sendButton">送信</button>
+        <div class="menu-wrap">
+          <button class="menu-button" id="menuButton" type="button" title="メニュー" aria-label="メニュー" aria-haspopup="menu" aria-expanded="false" aria-controls="menuPanel">
+            <span aria-hidden="true"></span>
+          </button>
+          <div class="menu-panel" id="menuPanel" role="menu" aria-hidden="true">
+            <button type="button" id="employeeSettingsButton" role="menuitem">従業員設定</button>
+            <button type="button" id="checklistSettingsButton" role="menuitem">チェックリスト項目変更</button>
+            <button type="button" id="destinationSettingsButton" role="menuitem">送信先設定</button>
+            <button type="button" id="exportButton" role="menuitem">CSV保存</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel sidebar">
+        <div class="field-grid">
+          <label>営業日
+            <input id="businessDate" type="date">
+          </label>
+          <label>出勤
+            <select id="staffName">
+              <option value="">選択</option>
+              <option>朱生</option>
+              <option>未生</option>
+              <option>美生</option>
+              <option>その他</option>
+            </select>
+          </label>
+          <div class="inline-fields">
+            <label>売上
+              <span class="with-unit">
+                <input id="salesAmount" type="number" inputmode="numeric" min="0">
+                <span class="unit">円</span>
+              </span>
+            </label>
+            <label>客数
+              <span class="with-unit">
+                <input id="guestCount" type="number" inputmode="numeric" min="0">
+                <span class="unit">名</span>
+              </span>
+            </label>
+          </div>
+          <label>レジ内現金
+            <span class="with-unit">
+              <input id="cashAmount" type="number" inputmode="numeric" min="0">
+              <span class="unit">円</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="summary" aria-live="polite">
+          <div class="meter">
+            <span id="progressText">0 / 0 完了</span>
+            <span id="remainingText">未完了 0</span>
+          </div>
+          <div class="progress" aria-label="進捗">
+            <span id="progressBar"></span>
+          </div>
+        </div>
+        <div class="status" id="statusText" aria-live="polite"></div>
+      </aside>
+
+      <main class="content">
+        <section class="panel section">
+          <div class="section-head">
+            <h2>チェックリスト</h2>
+            <span class="badge" id="checkBadge">0 / 0</span>
+          </div>
+          <div class="inventory-groups" id="checkArea"></div>
+        </section>
+
+        <section class="panel section">
+          <div class="section-head">
+            <h2>在庫チェックリスト</h2>
+            <span class="badge" id="stockBadge">0項目</span>
+          </div>
+          <div class="inventory-groups" id="inventoryBody"></div>
+        </section>
+
+        <section class="panel section">
+          <div class="section-head">
+            <h2>メモ・引き継ぎ</h2>
+          </div>
+          <div class="memo-panel">
+            <textarea id="closingMemo" placeholder="不足食材、発注確認、翌日への引き継ぎなど"></textarea>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="employeeModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="employeeModalTitle">
+      <div class="modal-head">
+        <h2 id="employeeModalTitle">従業員設定</h2>
+        <button class="modal-close" id="closeEmployeeModal" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="modal-body">
+        <form class="add-employee" id="employeeForm">
+          <label>名前
+            <input id="employeeNameInput" type="text" placeholder="例：田中">
+          </label>
+          <button class="primary-button" type="submit">追加</button>
+        </form>
+        <div class="employee-list" id="employeeList"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="checklistModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="checklistModalTitle">
+      <div class="modal-head">
+        <h2 id="checklistModalTitle">チェックリスト項目変更</h2>
+        <button class="modal-close" id="closeChecklistModal" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-list" id="checkItemList"></div>
+        <div class="settings-list" id="stockItemList"></div>
+        <form class="settings-row add-row" id="stockGroupForm">
+          <div class="settings-fields">
+            <label>分類名
+              <input id="stockGroupNameInput" type="text" placeholder="例：消耗品">
+            </label>
+          </div>
+          <button class="primary-button" type="submit">分類追加</button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="destinationModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="destinationModalTitle">
+      <div class="modal-head">
+        <h2 id="destinationModalTitle">送信先設定</h2>
+        <button class="modal-close" id="closeDestinationModal" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="modal-body">
+        <form class="settings-row add-row" id="destinationForm">
+          <div class="settings-fields">
+            <label>LINEグループ送信用Webhook URL
+              <input id="destinationUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+            </label>
+            <div class="helper-text">LINE Messaging APIへ転送するWebhook URLを設定します。</div>
+          </div>
+          <button class="primary-button" type="submit">保存</button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const storageKey = "restaurantClosingSheet:v3";
+    const defaultEmployees = ["朱生", "未生", "美生", "その他"];
+    const defaultChecks = [
+      { id: "trash", label: "ゴミ出し", note: "月曜日：可燃／水曜日：プラ・ペット" },
+      { id: "register-close", label: "レジ締め", note: "売上・レジ内現金と合わせて確認" },
+      { id: "gas", label: "ガス元栓確認", note: "コンロ・給湯器" },
+      { id: "stock-check", label: "在庫チェック(別途チェックリスト)", note: "下の在庫数を入力" },
+      { id: "order-check", label: "発注確認", note: "不足分はメモへ記録" },
+      { id: "aircon-off", label: "エアコンOFF", note: "ホール・キッチン" }
+    ];
+
+    const defaultInventoryGroups = [
+      { group: "タコスBOX", items: [{ id: "photo", name: "写真添付", unit: "", value: "" }] },
+      {
+        group: "タコストック",
+        items: [
+          { id: "tortilla-normal", name: "トルティーヤ 通常", unit: "枚", value: 77 },
+          { id: "tortilla-dessert", name: "トルティーヤ デザート", unit: "枚", value: 0 },
+          { id: "carnitas", name: "カルニタス冷凍", unit: "個", value: 7 },
+          { id: "cut-onion", name: "カット済み玉ねぎ", unit: "個", value: 0 },
+          { id: "sauce", name: "ソース", unit: "本", value: 1 }
+        ]
+      },
+      {
+        group: "加工前材料",
+        items: [
+          { id: "frozen-meat", name: "冷凍肉", unit: "個", value: 2 },
+          { id: "onion", name: "玉ねぎ", unit: "個", value: 1.5 },
+          { id: "cilantro", name: "パクチー", unit: "袋", value: 1 },
+          { id: "jalapeno", name: "ハラペーニョ", unit: "瓶", value: "" },
+          { id: "lime", name: "ライム", unit: "個", value: 5 },
+          { id: "tomato", name: "トマト", unit: "個", value: 4 }
+        ]
+      },
+      {
+        group: "その他",
+        items: [
+          { id: "shredded-cheese", name: "シュレッドチーズ", unit: "袋", value: 17, grams: true },
+          { id: "tortilla-chips", name: "トルティーヤチップス", unit: "袋", value: 8, grams: true },
+          { id: "salsa", name: "サルサソース", unit: "本", value: 2.3 },
+          { id: "whip", name: "ホイップ", unit: "袋", value: 0 },
+          { id: "oreo", name: "オレオ", unit: "袋", value: 1 },
+          { id: "mint", name: "ミント", unit: "個", value: 0.5 },
+          { id: "nuts", name: "ナッツ", unit: "袋", value: 0.1 },
+          { id: "lemon", name: "レモン", unit: "個", value: 1 }
+        ]
+      }
+    ];
+
+    const elements = {
+      title: document.querySelector("#titleText"),
+      date: document.querySelector("#businessDate"),
+      staff: document.querySelector("#staffName"),
+      sales: document.querySelector("#salesAmount"),
+      guests: document.querySelector("#guestCount"),
+      cash: document.querySelector("#cashAmount"),
+      checks: document.querySelector("#checkArea"),
+      inventory: document.querySelector("#inventoryBody"),
+      memo: document.querySelector("#closingMemo"),
+      status: document.querySelector("#statusText"),
+      progressText: document.querySelector("#progressText"),
+      remainingText: document.querySelector("#remainingText"),
+      progressBar: document.querySelector("#progressBar"),
+      checkBadge: document.querySelector("#checkBadge"),
+      stockBadge: document.querySelector("#stockBadge"),
+      employeeModal: document.querySelector("#employeeModal"),
+      employeeNameInput: document.querySelector("#employeeNameInput"),
+      employeeList: document.querySelector("#employeeList"),
+      checklistModal: document.querySelector("#checklistModal"),
+      destinationModal: document.querySelector("#destinationModal"),
+      destinationUrlInput: document.querySelector("#destinationUrlInput"),
+      checkItemList: document.querySelector("#checkItemList"),
+      stockGroupNameInput: document.querySelector("#stockGroupNameInput"),
+      stockItemList: document.querySelector("#stockItemList")
+    };
+
+    const state = loadState();
+    const settingsUi = {
+      workOpen: false,
+      stockOpenGroups: new Set(),
+      stockEditGroups: new Set(),
+      draggingStockGroup: "",
+      draggingStockItem: "",
+      draggingStockItemGroup: "",
+      dragFloatingCard: null,
+      dragOffsetY: 0,
+      dragLockedLeft: 0,
+      dragLockedWidth: 0
+    };
+
+    function localDate() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          parsed.employees = normalizeEmployees(parsed.employees);
+          parsed.checkItems = normalizeCheckItems(parsed.checkItems);
+          parsed.inventoryGroups = normalizeInventoryGroups(parsed.inventoryGroups);
+          parsed.checks = normalizeCheckState(parsed.checks, parsed.checkItems);
+          parsed.checkedAt = normalizeCheckedAt(parsed.checkedAt, parsed.checkItems);
+          parsed.inventory = normalizeInventoryValues(parsed.inventory, parsed.inventoryGroups);
+          parsed.grams = normalizeGramValues(parsed.grams, parsed.inventoryGroups);
+          parsed.photos = normalizePhotoValues(parsed.photos, parsed.inventoryGroups);
+          parsed.sendUrl = String(parsed.sendUrl || "").trim();
+          return parsed;
+        } catch (error) {
+          console.warn("Saved state could not be loaded.", error);
+        }
+      }
+
+      return {
+        date: localDate(),
+        staff: "未生",
+        sales: "",
+        guests: "",
+        cash: "",
+        memo: "",
+        sentAt: "",
+        sendUrl: "",
+        employees: [...defaultEmployees],
+        checkItems: defaultChecks.map(item => ({ ...item })),
+        inventoryGroups: cloneInventoryGroups(defaultInventoryGroups),
+        checkedAt: {},
+        checks: Object.fromEntries(defaultChecks.map(item => [item.id, false])),
+        inventory: Object.fromEntries(defaultInventoryGroups.flatMap(group => group.items.map(item => [item.id, String(item.value)]))),
+        grams: {},
+        photos: {}
+      };
+    }
+
+    function normalizeEmployees(value) {
+      const source = Array.isArray(value) && value.length ? value : defaultEmployees;
+      const names = source.map(name => String(name).trim()).filter(Boolean);
+      return [...new Set(names)];
+    }
+
+    function normalizeCheckItems(value) {
+      const source = Array.isArray(value) && value.length ? value : defaultChecks;
+      return source
+        .map((item, index) => ({
+          id: String(item.id || `check-${Date.now()}-${index}`),
+          label: String(item.label || "").trim(),
+          note: String(item.note || "").trim()
+        }))
+        .filter(item => item.label);
+    }
+
+    function normalizeCheckState(value, items) {
+      const saved = value && typeof value === "object" ? value : {};
+      return Object.fromEntries(items.map(item => [item.id, Boolean(saved[item.id])]));
+    }
+
+    function normalizeCheckedAt(value, items) {
+      const saved = value && typeof value === "object" ? value : {};
+      return Object.fromEntries(items.map(item => [item.id, saved[item.id] || ""]));
+    }
+
+    function makeCheckId() {
+      return `custom-check-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function cloneInventoryGroups(groups) {
+      return groups.map(group => ({
+        group: group.group,
+        items: group.items.map(item => ({ ...item }))
+      }));
+    }
+
+    function normalizeInventoryGroups(value) {
+      const source = Array.isArray(value) && value.length ? value : defaultInventoryGroups;
+      return source.map(group => ({
+        group: String(group.group || "").trim() || "その他",
+        items: Array.isArray(group.items) ? group.items.map((item, index) => ({
+          id: String(item.id || `stock-${Date.now()}-${index}`),
+          name: String(item.name || "").trim(),
+          unit: String(item.unit || "").trim(),
+          value: item.value ?? "",
+          grams: Boolean(item.grams)
+        })).filter(item => item.name) : []
+      })).filter(group => group.items.length);
+    }
+
+    function normalizeInventoryValues(value, groups) {
+      const saved = value && typeof value === "object" ? value : {};
+      return Object.fromEntries(groups.flatMap(group => group.items.map(item => [
+        item.id,
+        saved[item.id] ?? String(item.value ?? "")
+      ])));
+    }
+
+    function normalizeGramValues(value, groups) {
+      const saved = value && typeof value === "object" ? value : {};
+      return Object.fromEntries(groups.flatMap(group => group.items.filter(item => item.grams).map(item => [
+        item.id,
+        saved[item.id] ?? ""
+      ])));
+    }
+
+    function isPhotoItem(item) {
+      return item.id === "photo" || String(item.name || "").includes("写真");
+    }
+
+    function normalizePhotoValues(value, groups) {
+      const saved = value && typeof value === "object" ? value : {};
+      return Object.fromEntries(groups.flatMap(group => group.items.filter(isPhotoItem).map(item => [
+        item.id,
+        saved[item.id] && typeof saved[item.id] === "object" ? saved[item.id] : null
+      ])));
+    }
+
+    function makeStockId() {
+      return `custom-stock-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function findStockItemContext(id) {
+      for (const group of state.inventoryGroups) {
+        const item = group.items.find(candidate => candidate.id === id);
+        if (item) return { group, item };
+      }
+      return null;
+    }
+
+    function renameStockGroup(previousName, nextName) {
+      const name = String(nextName || "").trim();
+      if (!name) return;
+      const group = state.inventoryGroups.find(candidate => candidate.group === previousName);
+      if (!group || group.group === name) return;
+      const existing = state.inventoryGroups.find(candidate => candidate.group === name);
+      if (existing) {
+        existing.items.push(...group.items);
+        state.inventoryGroups = state.inventoryGroups.filter(candidate => candidate !== group);
+      } else {
+        group.group = name;
+      }
+    }
+
+    function removeStockGroup(groupName) {
+      const group = state.inventoryGroups.find(candidate => candidate.group === groupName);
+      if (!group) return;
+      group.items.forEach(item => {
+        delete state.inventory[item.id];
+        delete state.grams[item.id];
+        delete state.photos[item.id];
+      });
+      state.inventoryGroups = state.inventoryGroups.filter(candidate => candidate !== group);
+    }
+
+    function insertStockGroup(sourceName, insertIndex) {
+      if (!sourceName) return false;
+      const sourceIndex = state.inventoryGroups.findIndex(group => group.group === sourceName);
+      if (sourceIndex < 0) return false;
+      let targetIndex = Math.max(0, Math.min(insertIndex, state.inventoryGroups.length));
+      if (targetIndex === sourceIndex || targetIndex === sourceIndex + 1) return false;
+      const [group] = state.inventoryGroups.splice(sourceIndex, 1);
+      if (sourceIndex < targetIndex) targetIndex -= 1;
+      state.inventoryGroups.splice(targetIndex, 0, group);
+      return true;
+    }
+
+    function insertStockItem(groupName, sourceId, insertIndex) {
+      if (!groupName || !sourceId) return false;
+      const group = state.inventoryGroups.find(candidate => candidate.group === groupName);
+      if (!group) return false;
+      const sourceIndex = group.items.findIndex(item => item.id === sourceId);
+      if (sourceIndex < 0) return false;
+      let targetIndex = Math.max(0, Math.min(insertIndex, group.items.length));
+      if (targetIndex === sourceIndex || targetIndex === sourceIndex + 1) return false;
+      const [item] = group.items.splice(sourceIndex, 1);
+      if (sourceIndex < targetIndex) targetIndex -= 1;
+      group.items.splice(targetIndex, 0, item);
+      return true;
+    }
+
+    function saveState() {
+      state.date = elements.date.value;
+      state.staff = elements.staff.value;
+      state.sales = elements.sales.value;
+      state.guests = elements.guests.value;
+      state.cash = elements.cash.value;
+      state.memo = elements.memo.value;
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function resetDailyEntry() {
+      state.date = localDate();
+      state.staff = "";
+      state.sales = "";
+      state.guests = "";
+      state.cash = "";
+      state.memo = "";
+      state.sentAt = "";
+      state.checks = Object.fromEntries(state.checkItems.map(item => [item.id, false]));
+      state.checkedAt = Object.fromEntries(state.checkItems.map(item => [item.id, ""]));
+      state.inventory = Object.fromEntries(state.inventoryGroups.flatMap(group => group.items.map(item => [
+        item.id,
+        ""
+      ])));
+      state.grams = {};
+      state.photos = {};
+
+      elements.date.value = state.date;
+      elements.sales.value = "";
+      elements.guests.value = "";
+      elements.cash.value = "";
+      elements.memo.value = "";
+      renderStaffOptions();
+      renderChecks();
+      renderInventory();
+      renderProgress();
+      elements.status.textContent = "リセットしました。";
+      elements.status.className = "status complete";
+      saveState();
+    }
+
+    function renderChecks() {
+      elements.checks.innerHTML = `
+        <section class="stock-card">
+          <div class="stock-head">
+            <span>作業内容</span>
+            <span class="badge">${state.checkItems.length}項目</span>
+          </div>
+          <div class="items">
+            ${state.checkItems.map(item => `
+              <button class="item-button ${state.checks[item.id] ? "done" : ""}" data-check-id="${item.id}">
+                <span class="check" aria-hidden="true">${state.checks[item.id] ? "✓" : ""}</span>
+                <span>
+                  <span class="item-title">${escapeHtml(item.label)}</span>
+                  ${item.note ? `<span class="item-note">${escapeHtml(item.note)}</span>` : ""}
+                </span>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderInventory() {
+      elements.inventory.innerHTML = state.inventoryGroups.map(group => `
+        <section class="stock-card">
+          <div class="stock-head">
+            <span>${escapeHtml(group.group)}</span>
+            <span class="badge">${group.items.length}項目</span>
+          </div>
+          <div class="stock-list">
+            ${group.items.map(item => `
+              ${isPhotoItem(item) ? `
+                <div class="stock-row photo-row">
+                  <span class="stock-name">${escapeHtml(item.name)}</span>
+                  <div class="photo-control">
+                    <input class="photo-input" type="file" accept="image/*" data-photo-input="${item.id}">
+                    ${state.photos[item.id] ? `
+                      <div class="photo-preview">
+                        <img src="${escapeHtml(state.photos[item.id].dataUrl)}" alt="${escapeHtml(item.name)}の添付画像">
+                        <span class="photo-meta">${escapeHtml(state.photos[item.id].name || "添付画像")}</span>
+                        <button class="small-button danger" type="button" data-photo-remove="${item.id}">削除</button>
+                      </div>
+                    ` : ""}
+                  </div>
+                </div>
+              ` : `
+                <label class="stock-row">
+                  <span class="stock-name">${escapeHtml(item.name)}</span>
+                  <input type="number" step="0.1" inputmode="decimal" data-stock="${item.id}" value="${escapeHtml(state.inventory[item.id] ?? "")}">
+                  <span class="unit">${escapeHtml(item.unit)}</span>
+                  <span class="gram-cell ${item.grams ? "" : "empty"}">
+                    <input type="number" inputmode="decimal" data-gram="${item.id}" value="${escapeHtml(state.grams[item.id] ?? "")}">
+                    <span class="unit">g</span>
+                  </span>
+                </label>
+              `}
+            `).join("")}
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function renderStaffOptions() {
+      const selected = state.staff || elements.staff.value;
+      elements.staff.innerHTML = `<option value="">選択</option>${state.employees.map(name => `
+        <option value="${escapeHtml(name)}">${escapeHtml(name)}</option>
+      `).join("")}`;
+      elements.staff.value = state.employees.includes(selected) ? selected : "";
+      state.staff = elements.staff.value;
+    }
+
+    function renderEmployeeList() {
+      elements.employeeList.innerHTML = state.employees.length ? state.employees.map(name => `
+        <div class="employee-row">
+          <span class="employee-name">${escapeHtml(name)}</span>
+          <button class="small-button danger" type="button" data-employee-remove="${escapeHtml(name)}">削除</button>
+        </div>
+      `).join("") : `<div class="empty-text">登録されている従業員はいません。</div>`;
+    }
+
+    function renderCheckAddForm() {
+      return `
+        <form class="settings-row add-row" data-check-add>
+          <div class="settings-fields">
+            <label>項目名
+              <input type="text" data-check-add-label placeholder="例：入口の施錠">
+            </label>
+            <label>補足文
+              <input type="text" data-check-add-note placeholder="例：裏口も確認">
+            </label>
+          </div>
+          <button class="primary-button" type="submit">追加</button>
+        </form>
+      `;
+    }
+
+    function renderCheckItemList() {
+      elements.checkItemList.innerHTML = `
+        <section class="stock-card settings-card ${settingsUi.workOpen ? "open" : ""}">
+          <div class="stock-head">
+            <span>作業内容</span>
+            <span class="stock-head-actions">
+              <span class="badge">${state.checkItems.length}項目</span>
+              <button class="collapse-button" type="button" data-settings-toggle="work" aria-label="作業内容を${settingsUi.workOpen ? "閉じる" : "開く"}" aria-expanded="${settingsUi.workOpen}"></button>
+            </span>
+          </div>
+          <div class="settings-list in-card settings-panel">
+            ${state.checkItems.map(item => `
+              <div class="settings-row" data-check-setting-id="${item.id}">
+                <div class="settings-fields">
+                  <label>項目名
+                    <input type="text" data-check-setting-label="${item.id}" value="${escapeHtml(item.label)}">
+                  </label>
+                  <label>補足文
+                    <input type="text" data-check-setting-note="${item.id}" value="${escapeHtml(item.note)}">
+                  </label>
+                </div>
+                <button class="small-button danger" type="button" data-check-setting-remove="${item.id}">削除</button>
+              </div>
+            `).join("")}
+            ${renderCheckAddForm()}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderStockItemSettings() {
+      elements.stockItemList.innerHTML = state.inventoryGroups.map(group => `
+        <section class="stock-card settings-card ${settingsUi.stockOpenGroups.has(group.group) ? "open" : ""}" data-stock-group-card="${escapeHtml(group.group)}">
+          <div class="stock-head">
+            <span class="stock-head-title">
+              <button class="drag-handle" type="button" data-stock-group-drag="${escapeHtml(group.group)}" aria-label="${escapeHtml(group.group)}を並べ替え">⋮⋮</button>
+              <span>${escapeHtml(group.group)}</span>
+            </span>
+            <span class="stock-head-actions">
+              <span class="badge">${group.items.length}項目</span>
+              <button class="collapse-button" type="button" data-stock-group-toggle="${escapeHtml(group.group)}" aria-label="${escapeHtml(group.group)}を${settingsUi.stockOpenGroups.has(group.group) ? "閉じる" : "開く"}" aria-expanded="${settingsUi.stockOpenGroups.has(group.group)}"></button>
+              <button class="edit-icon-button" type="button" data-stock-group-edit="${escapeHtml(group.group)}" aria-label="${escapeHtml(group.group)}を編集">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 17.6V20h2.4L17.7 8.7l-2.4-2.4L4 17.6z"></path>
+                  <path d="M19.4 7c.8-.8.8-2 0-2.8l-.6-.6c-.8-.8-2-.8-2.8 0l-.9.9 3.4 3.4.9-.9z"></path>
+                </svg>
+              </button>
+            </span>
+          </div>
+          <div class="group-edit-panel ${settingsUi.stockEditGroups.has(group.group) ? "open" : ""}" data-stock-group-panel="${escapeHtml(group.group)}">
+            <div class="settings-row">
+              <div class="settings-fields">
+                <label>分類名
+                  <input type="text" data-stock-group-name="${escapeHtml(group.group)}" value="${escapeHtml(group.group)}">
+                </label>
+              </div>
+              <button class="small-button danger" type="button" data-stock-group-remove="${escapeHtml(group.group)}">削除</button>
+            </div>
+          </div>
+          <div class="settings-list in-card settings-panel">
+            ${group.items.map(item => `
+              <div class="settings-row stock-setting-row" data-stock-setting-id="${item.id}" data-stock-setting-group="${escapeHtml(group.group)}">
+                <button class="drag-handle" type="button" data-stock-item-drag="${item.id}" data-stock-item-group="${escapeHtml(group.group)}" aria-label="${escapeHtml(item.name)}を並べ替え">⋮⋮</button>
+                <div class="settings-fields">
+                  <label>項目名
+                    <input type="text" data-stock-setting-name="${item.id}" value="${escapeHtml(item.name)}">
+                  </label>
+                  <label>単位
+                    <input type="text" data-stock-setting-unit="${item.id}" value="${escapeHtml(item.unit)}">
+                  </label>
+                </div>
+                <button class="small-button danger" type="button" data-stock-setting-remove="${item.id}">削除</button>
+              </div>
+            `).join("")}
+            <form class="settings-row add-row" data-stock-add-group="${escapeHtml(group.group)}">
+              <div class="settings-fields">
+                <label>項目名
+                  <input type="text" data-stock-add-name placeholder="例：紙ナプキン">
+                </label>
+                <label>単位
+                  <input type="text" data-stock-add-unit placeholder="例：袋">
+                </label>
+              </div>
+              <button class="primary-button" type="submit">追加</button>
+            </form>
+          </div>
+        </section>
+      `).join("");
+    }
+
+    function renderTitle() {
+      elements.title.textContent = "A/ZURE CLOSE WORK";
+    }
+
+    function renderProgress() {
+      const doneCount = state.checkItems.filter(item => state.checks[item.id]).length;
+      const remaining = state.checkItems.length - doneCount;
+      const percent = state.checkItems.length ? Math.round((doneCount / state.checkItems.length) * 100) : 0;
+      elements.progressText.textContent = `${doneCount} / ${state.checkItems.length} 完了`;
+      elements.remainingText.textContent = `未完了 ${remaining}`;
+      elements.progressBar.style.width = `${percent}%`;
+      elements.checkBadge.textContent = `${doneCount} / ${state.checkItems.length}`;
+      elements.stockBadge.textContent = `${state.inventoryGroups.reduce((sum, group) => sum + group.items.length, 0)}項目`;
+
+      if (state.sentAt) {
+        const sentTime = new Date(state.sentAt).toLocaleString("ja-JP");
+        elements.status.className = remaining ? "status warning" : "status complete";
+        elements.status.textContent = remaining ? `送信記録あり：${sentTime}、未チェック ${remaining} 件` : `送信済み：${sentTime}`;
+      } else {
+        elements.status.className = "status";
+        elements.status.textContent = "入力内容はこの端末に自動保存されます。";
+      }
+    }
+
+    function render() {
+      renderTitle();
+      renderStaffOptions();
+      renderChecks();
+      renderInventory();
+      renderEmployeeList();
+      renderCheckItemList();
+      renderStockItemSettings();
+      renderProgress();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[character]));
+    }
+
+    function exportCsv() {
+      saveState();
+      const rows = [
+        ["日付", state.date],
+        ["出勤", state.staff],
+        ["売上", state.sales, "円"],
+        ["客数", state.guests, "名"],
+        ["レジ内現金", state.cash, "円"],
+        ["送信日時", state.sentAt ? new Date(state.sentAt).toLocaleString("ja-JP") : ""],
+        ["メモ", state.memo],
+        [],
+        ["チェックリスト", "状態", "確認時刻"]
+      ];
+
+      state.checkItems.forEach(item => rows.push([
+        item.label,
+        state.checks[item.id] ? "完了" : "未完了",
+        state.checkedAt[item.id] ? new Date(state.checkedAt[item.id]).toLocaleString("ja-JP") : ""
+      ]));
+      rows.push([]);
+      rows.push(["分類", "項目", "数量", "単位", "g"]);
+      state.inventoryGroups.forEach(group => {
+        group.items.forEach(item => rows.push([
+          group.group,
+          item.name,
+          state.inventory[item.id] ?? "",
+          item.unit,
+          state.grams[item.id] ?? ""
+        ]));
+      });
+
+      const csv = rows.map(row => row.map(value => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `締めチェック_${state.date || localDate()}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function loadImage(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = dataUrl;
+      });
+    }
+
+    async function compressPhotoFile(file) {
+      const originalDataUrl = await fileToDataUrl(file);
+      const image = await loadImage(originalDataUrl);
+      const maxSize = 1280;
+      const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, width, height);
+      return {
+        name: file.name || "photo.jpg",
+        type: "image/jpeg",
+        dataUrl: canvas.toDataURL("image/jpeg", .78)
+      };
+    }
+
+    function buildSubmissionPayload() {
+      const doneCount = state.checkItems.filter(item => state.checks[item.id]).length;
+      const missingCount = state.checkItems.length - doneCount;
+      const inventoryLines = state.inventoryGroups.flatMap(group => {
+        const itemLines = group.items.map(item => {
+          if (isPhotoItem(item)) {
+            return `・${item.name}：${state.photos[item.id] ? "添付あり" : "未添付"}`;
+          }
+          const value = String(state.inventory[item.id] ?? "").trim() || "未入力";
+          const unit = item.unit ? item.unit : "";
+          const grams = String(state.grams[item.id] ?? "").trim();
+          const gramsText = grams ? ` / ${grams}g` : "";
+          return `・${item.name}：${value}${unit}${gramsText}`;
+        });
+        return itemLines.length ? [`【${group.group}】`, ...itemLines] : [];
+      });
+      const lineMessage = [
+        "A/ZURE CLOSE WORK",
+        `営業日：${state.date || ""}`,
+        `出勤：${state.staff || ""}`,
+        `売上：${state.sales || ""}円`,
+        `客数：${state.guests || ""}名`,
+        `レジ内現金：${state.cash || ""}円`,
+        `チェック：${doneCount}/${state.checkItems.length} 完了`,
+        missingCount ? `未チェック：${missingCount}件` : "未チェック：なし",
+        inventoryLines.length ? ["", "【在庫チェックリスト】", ...inventoryLines].join("\n") : "",
+        state.memo ? `メモ：${state.memo}` : ""
+      ].filter(Boolean).join("\n");
+
+      return {
+        date: state.date,
+        staff: state.staff,
+        sales: state.sales,
+        guests: state.guests,
+        cash: state.cash,
+        memo: state.memo,
+        sentAt: state.sentAt,
+        lineMessage,
+        checks: state.checkItems.map(item => ({
+          label: item.label,
+          note: item.note,
+          done: Boolean(state.checks[item.id]),
+          checkedAt: state.checkedAt[item.id] || ""
+        })),
+        inventory: state.inventoryGroups.map(group => ({
+          group: group.group,
+          items: group.items.map(item => ({
+            name: item.name,
+            unit: item.unit,
+            value: state.inventory[item.id] ?? "",
+            grams: state.grams[item.id] ?? "",
+            photo: isPhotoItem(item) ? state.photos[item.id] : null
+          }))
+        })),
+        photos: state.inventoryGroups.flatMap(group => group.items.filter(isPhotoItem).map(item => ({
+          group: group.group,
+          name: item.name,
+          photo: state.photos[item.id] || null
+        }))).filter(item => item.photo)
+      };
+    }
+
+    async function sendToDestination(payload) {
+      const url = String(state.sendUrl || "").trim();
+      if (!url) return { skipped: true };
+      await fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return { skipped: false };
+    }
+
+    elements.date.value = state.date || localDate();
+    elements.staff.value = state.staff || "";
+    elements.sales.value = state.sales || "";
+    elements.guests.value = state.guests || "";
+    elements.cash.value = state.cash || "";
+    elements.memo.value = state.memo || "";
+
+    document.addEventListener("input", event => {
+      const target = event.target;
+      if (target.matches("[data-stock]")) {
+        state.inventory[target.dataset.stock] = target.value;
+      }
+      if (target.matches("[data-gram]")) {
+        state.grams[target.dataset.gram] = target.value;
+      }
+      saveState();
+      renderTitle();
+      renderProgress();
+    });
+
+    document.addEventListener("change", async event => {
+      const target = event.target;
+      if (target.matches("[data-photo-input]")) {
+        const file = target.files && target.files[0];
+        if (!file) return;
+        elements.status.textContent = "写真を読み込んでいます。";
+        elements.status.className = "status";
+        try {
+          state.photos[target.dataset.photoInput] = await compressPhotoFile(file);
+          saveState();
+          renderInventory();
+          renderProgress();
+          elements.status.textContent = "写真を添付しました。";
+          elements.status.className = "status complete";
+        } catch (error) {
+          console.warn("Photo could not be loaded.", error);
+          elements.status.textContent = "写真の読み込みに失敗しました。別の画像を選んでください。";
+          elements.status.className = "status warning";
+        }
+        return;
+      }
+      saveState();
+      if (!target.matches("[data-stock]") && !target.matches("[data-gram]")) {
+        renderTitle();
+        renderProgress();
+      }
+    });
+
+    elements.inventory.addEventListener("click", event => {
+      const removeButton = event.target.closest("[data-photo-remove]");
+      if (!removeButton) return;
+      delete state.photos[removeButton.dataset.photoRemove];
+      saveState();
+      renderInventory();
+      renderProgress();
+      elements.status.textContent = "写真を削除しました。";
+      elements.status.className = "status";
+    });
+
+    elements.checks.addEventListener("click", event => {
+      const button = event.target.closest("[data-check-id]");
+      if (!button) return;
+      const id = button.dataset.checkId;
+      state.checks[id] = !state.checks[id];
+      state.checkedAt[id] = state.checks[id] ? new Date().toISOString() : "";
+      saveState();
+      renderChecks();
+      renderProgress();
+    });
+
+    document.querySelector("#sendButton").addEventListener("click", async () => {
+      saveState();
+      state.sentAt = new Date().toISOString();
+      const missing = state.checkItems.filter(item => !state.checks[item.id]).length;
+      const payload = buildSubmissionPayload();
+      try {
+        const result = await sendToDestination(payload);
+        saveState();
+        renderProgress();
+        const baseMessage = result.skipped ? "送信記録を保存しました。" : "送信しました。";
+        elements.status.textContent = missing ? `${baseMessage} 未チェック ${missing} 件があります。` : baseMessage;
+        elements.status.className = missing ? "status warning" : "status complete";
+      } catch (error) {
+        console.warn("Send failed.", error);
+        state.sentAt = "";
+        saveState();
+        renderProgress();
+        elements.status.textContent = "送信に失敗しました。送信先URLを確認してください。";
+        elements.status.className = "status warning";
+      }
+    });
+
+    document.querySelector("#resetButton").addEventListener("click", () => {
+      if (!confirm("入力内容とチェック状態をリセットしますか？")) return;
+      resetDailyEntry();
+    });
+
+    const menuButton = document.querySelector("#menuButton");
+    const menuPanel = document.querySelector("#menuPanel");
+
+    function closeMenu() {
+      menuPanel.classList.remove("open");
+      menuButton.setAttribute("aria-expanded", "false");
+      menuPanel.setAttribute("aria-hidden", "true");
+    }
+
+    menuButton.addEventListener("click", event => {
+      event.stopPropagation();
+      const isOpen = menuPanel.classList.toggle("open");
+      menuButton.setAttribute("aria-expanded", String(isOpen));
+      menuPanel.setAttribute("aria-hidden", String(!isOpen));
+    });
+
+    menuPanel.addEventListener("click", event => {
+      event.stopPropagation();
+      if (event.target.closest("button")) closeMenu();
+    });
+
+    document.addEventListener("click", closeMenu);
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeMenu();
+        closeEmployeeModal();
+        closeChecklistModal();
+        closeDestinationModal();
+      }
+    });
+
+    function openEmployeeModal() {
+      renderEmployeeList();
+      elements.employeeModal.classList.add("open");
+      elements.employeeModal.setAttribute("aria-hidden", "false");
+      elements.employeeNameInput.value = "";
+      elements.employeeNameInput.focus();
+    }
+
+    function closeEmployeeModal() {
+      elements.employeeModal.classList.remove("open");
+      elements.employeeModal.setAttribute("aria-hidden", "true");
+    }
+
+    function openChecklistModal() {
+      settingsUi.workOpen = false;
+      settingsUi.stockOpenGroups.clear();
+      settingsUi.stockEditGroups.clear();
+      renderCheckItemList();
+      renderStockItemSettings();
+      elements.checklistModal.classList.add("open");
+      elements.checklistModal.setAttribute("aria-hidden", "false");
+      const modal = elements.checklistModal.querySelector(".modal");
+      if (modal) modal.scrollTop = 0;
+      document.querySelector("#closeChecklistModal").focus({ preventScroll: true });
+    }
+
+    function closeChecklistModal() {
+      elements.checklistModal.classList.remove("open");
+      elements.checklistModal.setAttribute("aria-hidden", "true");
+    }
+
+    function openDestinationModal() {
+      elements.destinationModal.classList.add("open");
+      elements.destinationModal.setAttribute("aria-hidden", "false");
+      elements.destinationUrlInput.value = state.sendUrl || "";
+      elements.destinationUrlInput.focus();
+    }
+
+    function closeDestinationModal() {
+      elements.destinationModal.classList.remove("open");
+      elements.destinationModal.setAttribute("aria-hidden", "true");
+    }
+
+    document.querySelector("#employeeSettingsButton").addEventListener("click", () => {
+      openEmployeeModal();
+    });
+
+    document.querySelector("#destinationSettingsButton").addEventListener("click", () => {
+      openDestinationModal();
+    });
+
+    document.querySelector("#closeEmployeeModal").addEventListener("click", closeEmployeeModal);
+    document.querySelector("#closeChecklistModal").addEventListener("click", closeChecklistModal);
+    document.querySelector("#closeDestinationModal").addEventListener("click", closeDestinationModal);
+
+    elements.employeeModal.addEventListener("click", event => {
+      if (event.target === elements.employeeModal) closeEmployeeModal();
+    });
+
+    elements.checklistModal.addEventListener("click", event => {
+      if (event.target === elements.checklistModal) closeChecklistModal();
+    });
+
+    elements.destinationModal.addEventListener("click", event => {
+      if (event.target === elements.destinationModal) closeDestinationModal();
+    });
+
+    document.querySelector("#destinationForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const url = elements.destinationUrlInput.value.trim();
+      if (url && !/^https?:\/\/.+/i.test(url)) {
+        elements.status.textContent = "送信先URLは http:// または https:// から入力してください。";
+        elements.status.className = "status warning";
+        return;
+      }
+      state.sendUrl = url;
+      saveState();
+      closeDestinationModal();
+      elements.status.textContent = state.sendUrl ? "LINEグループ送信先を保存しました。" : "送信先を空にしました。";
+      elements.status.className = "status complete";
+    });
+
+    document.querySelector("#employeeForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const name = elements.employeeNameInput.value.trim();
+      if (!name) return;
+      if (!state.employees.includes(name)) {
+        state.employees.push(name);
+      }
+      state.staff = name;
+      renderStaffOptions();
+      renderEmployeeList();
+      saveState();
+      elements.employeeNameInput.value = "";
+      elements.employeeNameInput.focus();
+    });
+
+    elements.employeeList.addEventListener("click", event => {
+      const removeButton = event.target.closest("[data-employee-remove]");
+      if (!removeButton) return;
+      const name = removeButton.dataset.employeeRemove;
+      state.employees = state.employees.filter(employee => employee !== name);
+      if (state.staff === name) state.staff = "";
+      renderStaffOptions();
+      renderEmployeeList();
+      saveState();
+    });
+
+    document.querySelector("#checklistSettingsButton").addEventListener("click", () => {
+      openChecklistModal();
+    });
+
+    elements.checkItemList.addEventListener("submit", event => {
+      const form = event.target.closest("[data-check-add]");
+      if (!form) return;
+      event.preventDefault();
+      const labelInput = form.querySelector("[data-check-add-label]");
+      const noteInput = form.querySelector("[data-check-add-note]");
+      const label = labelInput.value.trim();
+      const note = noteInput.value.trim();
+      if (!label) return;
+      const item = { id: makeCheckId(), label, note };
+      state.checkItems.push(item);
+      state.checks[item.id] = false;
+      state.checkedAt[item.id] = "";
+      settingsUi.workOpen = true;
+      renderChecks();
+      renderCheckItemList();
+      renderProgress();
+      saveState();
+      const nextLabelInput = elements.checkItemList.querySelector("[data-check-add-label]");
+      if (nextLabelInput) nextLabelInput.focus();
+    });
+
+    elements.checkItemList.addEventListener("input", event => {
+      const labelInput = event.target.closest("[data-check-setting-label]");
+      const noteInput = event.target.closest("[data-check-setting-note]");
+      if (!labelInput && !noteInput) return;
+      const id = labelInput ? labelInput.dataset.checkSettingLabel : noteInput.dataset.checkSettingNote;
+      const item = state.checkItems.find(candidate => candidate.id === id);
+      if (!item) return;
+      if (labelInput) item.label = labelInput.value.trim();
+      if (noteInput) item.note = noteInput.value.trim();
+      renderChecks();
+      saveState();
+    });
+
+    elements.checkItemList.addEventListener("click", event => {
+      const toggleButton = event.target.closest("[data-settings-toggle='work']");
+      if (toggleButton) {
+        settingsUi.workOpen = !settingsUi.workOpen;
+        renderCheckItemList();
+        return;
+      }
+
+      const removeButton = event.target.closest("[data-check-setting-remove]");
+      if (!removeButton) return;
+      const id = removeButton.dataset.checkSettingRemove;
+      state.checkItems = state.checkItems.filter(item => item.id !== id);
+      delete state.checks[id];
+      delete state.checkedAt[id];
+      renderChecks();
+      renderCheckItemList();
+      renderProgress();
+      saveState();
+    });
+
+    document.querySelector("#stockGroupForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const name = elements.stockGroupNameInput.value.trim();
+      if (!name) return;
+      if (!state.inventoryGroups.some(group => group.group === name)) {
+        state.inventoryGroups.push({ group: name, items: [] });
+      }
+      settingsUi.stockOpenGroups.add(name);
+      renderStockItemSettings();
+      renderProgress();
+      saveState();
+      elements.stockGroupNameInput.value = "";
+      elements.stockGroupNameInput.focus();
+    });
+
+    elements.stockItemList.addEventListener("submit", event => {
+      const form = event.target.closest("[data-stock-add-group]");
+      if (!form) return;
+      event.preventDefault();
+      const groupName = form.dataset.stockAddGroup || "その他";
+      const nameInput = form.querySelector("[data-stock-add-name]");
+      const unitInput = form.querySelector("[data-stock-add-unit]");
+      const name = nameInput.value.trim();
+      const unit = unitInput.value.trim();
+      if (!name) return;
+      let group = state.inventoryGroups.find(candidate => candidate.group === groupName);
+      if (!group) {
+        group = { group: groupName, items: [] };
+        state.inventoryGroups.push(group);
+      }
+      const item = { id: makeStockId(), name, unit, value: "", grams: false };
+      group.items.push(item);
+      state.inventory[item.id] = "";
+      settingsUi.stockOpenGroups.add(groupName);
+      renderInventory();
+      renderStockItemSettings();
+      renderProgress();
+      saveState();
+      nameInput.value = "";
+      unitInput.value = "";
+    });
+
+    elements.stockItemList.addEventListener("input", event => {
+      const groupInput = event.target.closest("[data-stock-group-name]");
+      if (groupInput) return;
+      const nameInput = event.target.closest("[data-stock-setting-name]");
+      const unitInput = event.target.closest("[data-stock-setting-unit]");
+      if (!nameInput && !unitInput) return;
+      const id = nameInput ? nameInput.dataset.stockSettingName : unitInput.dataset.stockSettingUnit;
+      const context = findStockItemContext(id);
+      if (!context) return;
+      if (nameInput) context.item.name = nameInput.value.trim();
+      if (unitInput) context.item.unit = unitInput.value.trim();
+      renderInventory();
+      saveState();
+    });
+
+    elements.stockItemList.addEventListener("change", event => {
+      const groupInput = event.target.closest("[data-stock-group-name]");
+      if (!groupInput) return;
+      const previousName = groupInput.dataset.stockGroupName;
+      const nextName = groupInput.value.trim();
+      const wasOpen = settingsUi.stockOpenGroups.has(previousName);
+      const wasEditing = settingsUi.stockEditGroups.has(previousName);
+      renameStockGroup(previousName, nextName);
+      if (nextName && wasOpen) {
+        settingsUi.stockOpenGroups.delete(previousName);
+        settingsUi.stockOpenGroups.add(nextName);
+      }
+      if (nextName && wasEditing) {
+        settingsUi.stockEditGroups.delete(previousName);
+        settingsUi.stockEditGroups.add(nextName);
+      }
+      renderInventory();
+      renderStockItemSettings();
+      renderProgress();
+      saveState();
+    });
+
+    function clearStockDragState() {
+      if (settingsUi.dragFloatingCard) {
+        settingsUi.dragFloatingCard.remove();
+      }
+      settingsUi.draggingStockGroup = "";
+      settingsUi.draggingStockItem = "";
+      settingsUi.draggingStockItemGroup = "";
+      settingsUi.dragFloatingCard = null;
+      elements.stockItemList.querySelectorAll(".dragging, .insert-before, .insert-after").forEach(card => {
+        card.classList.remove("dragging", "insert-before", "insert-after");
+      });
+      document.body.classList.remove("dragging-stock");
+    }
+
+    function getStockInsertPosition(clientY) {
+      const cards = Array.from(elements.stockItemList.querySelectorAll("[data-stock-group-card]"));
+      const visibleCards = cards.filter(card => !card.classList.contains("dragging"));
+      if (!visibleCards.length) return { card: null, position: "after", index: cards.length };
+      for (const card of visibleCards) {
+        const rect = card.getBoundingClientRect();
+        const cardIndex = cards.indexOf(card);
+        if (clientY < rect.top + rect.height / 2) {
+          return { card, position: "before", index: cardIndex };
+        }
+        if (clientY <= rect.bottom) {
+          return { card, position: "after", index: cardIndex + 1 };
+        }
+      }
+      const lastCard = visibleCards[visibleCards.length - 1];
+      return { card: lastCard, position: "after", index: cards.indexOf(lastCard) + 1 };
+    }
+
+    function showStockInsertPosition(clientY) {
+      elements.stockItemList.querySelectorAll(".insert-before, .insert-after").forEach(card => {
+        card.classList.remove("insert-before", "insert-after");
+      });
+      const insertion = getStockInsertPosition(clientY);
+      if (insertion.card) insertion.card.classList.add(insertion.position === "before" ? "insert-before" : "insert-after");
+      return insertion;
+    }
+
+    function getStockItemRows(groupName) {
+      return Array.from(elements.stockItemList.querySelectorAll("[data-stock-setting-group]"))
+        .filter(row => row.dataset.stockSettingGroup === groupName);
+    }
+
+    function getStockItemInsertPosition(groupName, clientY) {
+      const rows = getStockItemRows(groupName);
+      const visibleRows = rows.filter(row => !row.classList.contains("dragging"));
+      if (!visibleRows.length) return { row: null, position: "after", index: rows.length };
+      for (const row of visibleRows) {
+        const rect = row.getBoundingClientRect();
+        const rowIndex = rows.indexOf(row);
+        if (clientY < rect.top + rect.height / 2) {
+          return { row, position: "before", index: rowIndex };
+        }
+        if (clientY <= rect.bottom) {
+          return { row, position: "after", index: rowIndex + 1 };
+        }
+      }
+      const lastRow = visibleRows[visibleRows.length - 1];
+      return { row: lastRow, position: "after", index: rows.indexOf(lastRow) + 1 };
+    }
+
+    function showStockItemInsertPosition(groupName, clientY) {
+      getStockItemRows(groupName).forEach(row => {
+        row.classList.remove("insert-before", "insert-after");
+      });
+      const insertion = getStockItemInsertPosition(groupName, clientY);
+      if (insertion.row) insertion.row.classList.add(insertion.position === "before" ? "insert-before" : "insert-after");
+      return insertion;
+    }
+
+    elements.stockItemList.addEventListener("pointerdown", event => {
+      const itemHandle = event.target.closest("[data-stock-item-drag]");
+      if (itemHandle) {
+        const row = itemHandle.closest("[data-stock-setting-id]");
+        if (!row) return;
+        event.preventDefault();
+        const rect = row.getBoundingClientRect();
+        const floatingCard = row.cloneNode(true);
+        floatingCard.classList.add("drag-floating-card");
+        floatingCard.style.left = `${rect.left}px`;
+        floatingCard.style.top = `${rect.top}px`;
+        floatingCard.style.width = `${rect.width}px`;
+        floatingCard.style.height = `${rect.height}px`;
+        document.body.appendChild(floatingCard);
+        settingsUi.draggingStockItem = itemHandle.dataset.stockItemDrag;
+        settingsUi.draggingStockItemGroup = itemHandle.dataset.stockItemGroup;
+        settingsUi.dragFloatingCard = floatingCard;
+        settingsUi.dragOffsetY = event.clientY - rect.top;
+        settingsUi.dragLockedLeft = rect.left;
+        settingsUi.dragLockedWidth = rect.width;
+        row.classList.add("dragging");
+        document.body.classList.add("dragging-stock");
+        itemHandle.setPointerCapture(event.pointerId);
+        showStockItemInsertPosition(settingsUi.draggingStockItemGroup, event.clientY);
+        return;
+      }
+
+      const handle = event.target.closest("[data-stock-group-drag]");
+      if (!handle) return;
+      const card = handle.closest("[data-stock-group-card]");
+      if (!card) return;
+      event.preventDefault();
+      const rect = card.getBoundingClientRect();
+      const floatingCard = card.cloneNode(true);
+      floatingCard.classList.add("drag-floating-card");
+      floatingCard.style.left = `${rect.left}px`;
+      floatingCard.style.top = `${rect.top}px`;
+      floatingCard.style.width = `${rect.width}px`;
+      floatingCard.style.height = `${rect.height}px`;
+      document.body.appendChild(floatingCard);
+      settingsUi.draggingStockGroup = handle.dataset.stockGroupDrag;
+      settingsUi.dragFloatingCard = floatingCard;
+      settingsUi.dragOffsetY = event.clientY - rect.top;
+      settingsUi.dragLockedLeft = rect.left;
+      settingsUi.dragLockedWidth = rect.width;
+      card.classList.add("dragging");
+      document.body.classList.add("dragging-stock");
+      handle.setPointerCapture(event.pointerId);
+      showStockInsertPosition(event.clientY);
+    });
+
+    elements.stockItemList.addEventListener("pointermove", event => {
+      if (settingsUi.draggingStockItem && settingsUi.dragFloatingCard) {
+        event.preventDefault();
+        settingsUi.dragFloatingCard.style.left = `${settingsUi.dragLockedLeft}px`;
+        settingsUi.dragFloatingCard.style.width = `${settingsUi.dragLockedWidth}px`;
+        settingsUi.dragFloatingCard.style.top = `${event.clientY - settingsUi.dragOffsetY}px`;
+        showStockItemInsertPosition(settingsUi.draggingStockItemGroup, event.clientY);
+        return;
+      }
+
+      if (!settingsUi.draggingStockGroup || !settingsUi.dragFloatingCard) return;
+      event.preventDefault();
+      settingsUi.dragFloatingCard.style.left = `${settingsUi.dragLockedLeft}px`;
+      settingsUi.dragFloatingCard.style.width = `${settingsUi.dragLockedWidth}px`;
+      settingsUi.dragFloatingCard.style.top = `${event.clientY - settingsUi.dragOffsetY}px`;
+      showStockInsertPosition(event.clientY);
+    });
+
+    elements.stockItemList.addEventListener("pointerup", event => {
+      if (settingsUi.draggingStockItem) {
+        const insertion = getStockItemInsertPosition(settingsUi.draggingStockItemGroup, event.clientY);
+        if (insertStockItem(settingsUi.draggingStockItemGroup, settingsUi.draggingStockItem, insertion.index)) {
+          renderInventory();
+          renderStockItemSettings();
+          saveState();
+        }
+        clearStockDragState();
+        return;
+      }
+
+      if (!settingsUi.draggingStockGroup) return;
+      const insertion = getStockInsertPosition(event.clientY);
+      if (insertStockGroup(settingsUi.draggingStockGroup, insertion.index)) {
+        renderInventory();
+        renderStockItemSettings();
+        saveState();
+      }
+      clearStockDragState();
+    });
+
+    elements.stockItemList.addEventListener("pointercancel", clearStockDragState);
+
+    elements.stockItemList.addEventListener("click", event => {
+      const toggleButton = event.target.closest("[data-stock-group-toggle]");
+      if (toggleButton) {
+        const groupName = toggleButton.dataset.stockGroupToggle;
+        if (settingsUi.stockOpenGroups.has(groupName)) {
+          settingsUi.stockOpenGroups.delete(groupName);
+          settingsUi.stockEditGroups.delete(groupName);
+        } else {
+          settingsUi.stockOpenGroups.add(groupName);
+        }
+        renderStockItemSettings();
+        return;
+      }
+
+      const editButton = event.target.closest("[data-stock-group-edit]");
+      if (editButton) {
+        const groupName = editButton.dataset.stockGroupEdit;
+        settingsUi.stockOpenGroups.add(groupName);
+        if (settingsUi.stockEditGroups.has(groupName)) {
+          settingsUi.stockEditGroups.delete(groupName);
+        } else {
+          settingsUi.stockEditGroups.add(groupName);
+        }
+        renderStockItemSettings();
+        return;
+      }
+
+      const groupRemoveButton = event.target.closest("[data-stock-group-remove]");
+      if (groupRemoveButton) {
+        settingsUi.stockOpenGroups.delete(groupRemoveButton.dataset.stockGroupRemove);
+        settingsUi.stockEditGroups.delete(groupRemoveButton.dataset.stockGroupRemove);
+        removeStockGroup(groupRemoveButton.dataset.stockGroupRemove);
+        renderInventory();
+        renderStockItemSettings();
+        renderProgress();
+        saveState();
+        return;
+      }
+
+      const removeButton = event.target.closest("[data-stock-setting-remove]");
+      if (!removeButton) return;
+      const id = removeButton.dataset.stockSettingRemove;
+      for (const group of state.inventoryGroups) {
+        group.items = group.items.filter(item => item.id !== id);
+      }
+      delete state.inventory[id];
+      delete state.grams[id];
+      delete state.photos[id];
+      renderInventory();
+      renderStockItemSettings();
+      renderProgress();
+      saveState();
+    });
+    document.querySelector("#exportButton").addEventListener("click", exportCsv);
+
+    render();
+  </script>
+</body>
+</html>
