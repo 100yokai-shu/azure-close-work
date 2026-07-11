@@ -1365,6 +1365,23 @@
       ])));
     }
 
+    function normalizeNumberInput(value) {
+      return String(value || "")
+        .replace(/[０-９]/g, char => String.fromCharCode(char.charCodeAt(0) - 0xFEE0))
+        .replace(/[．。]/g, ".")
+        .replace(/[，、]/g, ",")
+        .replace(/[－ー―]/g, "-")
+        .replace(/[,\s　]/g, "");
+    }
+
+    function syncNormalizedNumberInput(input) {
+      const normalized = normalizeNumberInput(input.value);
+      if (input.value !== normalized) {
+        input.value = normalized;
+      }
+      return normalized;
+    }
+
     function isPhotoItem(item) {
       return item.id === "photo" || String(item.name || "").includes("写真");
     }
@@ -1443,9 +1460,9 @@
     function saveState() {
       state.date = elements.date.value;
       state.staff = elements.staff.value;
-      state.sales = elements.sales.value;
-      state.guests = elements.guests.value;
-      state.cash = elements.cash.value;
+      state.sales = syncNormalizedNumberInput(elements.sales);
+      state.guests = syncNormalizedNumberInput(elements.guests);
+      state.cash = syncNormalizedNumberInput(elements.cash);
       state.memo = elements.memo.value;
       localStorage.setItem(storageKey, JSON.stringify(state));
     }
@@ -1872,11 +1889,14 @@
 
     document.addEventListener("input", event => {
       const target = event.target;
+      if (target.matches("#salesAmount, #guestCount, #cashAmount")) {
+        syncNormalizedNumberInput(target);
+      }
       if (target.matches("[data-stock]")) {
-        state.inventory[target.dataset.stock] = target.value;
+        state.inventory[target.dataset.stock] = syncNormalizedNumberInput(target);
       }
       if (target.matches("[data-gram]")) {
-        state.grams[target.dataset.gram] = target.value;
+        state.grams[target.dataset.gram] = syncNormalizedNumberInput(target);
       }
       saveState();
       renderTitle();
