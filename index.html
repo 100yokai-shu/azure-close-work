@@ -1382,6 +1382,10 @@
       return normalized;
     }
 
+    function isNumberTextInput(input) {
+      return input.matches("#salesAmount, #guestCount, #cashAmount, [data-stock], [data-gram]");
+    }
+
     function isPhotoItem(item) {
       return item.id === "photo" || String(item.name || "").includes("写真");
     }
@@ -1460,9 +1464,9 @@
     function saveState() {
       state.date = elements.date.value;
       state.staff = elements.staff.value;
-      state.sales = syncNormalizedNumberInput(elements.sales);
-      state.guests = syncNormalizedNumberInput(elements.guests);
-      state.cash = syncNormalizedNumberInput(elements.cash);
+      state.sales = normalizeNumberInput(elements.sales.value);
+      state.guests = normalizeNumberInput(elements.guests.value);
+      state.cash = normalizeNumberInput(elements.cash.value);
       state.memo = elements.memo.value;
       localStorage.setItem(storageKey, JSON.stringify(state));
     }
@@ -1889,14 +1893,52 @@
 
     document.addEventListener("input", event => {
       const target = event.target;
-      if (target.matches("#salesAmount, #guestCount, #cashAmount")) {
+      const isComposing = event.isComposing || target.dataset.composing === "true";
+      if (isNumberTextInput(target) && !isComposing) {
         syncNormalizedNumberInput(target);
       }
       if (target.matches("[data-stock]")) {
-        state.inventory[target.dataset.stock] = syncNormalizedNumberInput(target);
+        state.inventory[target.dataset.stock] = normalizeNumberInput(target.value);
       }
       if (target.matches("[data-gram]")) {
-        state.grams[target.dataset.gram] = syncNormalizedNumberInput(target);
+        state.grams[target.dataset.gram] = normalizeNumberInput(target.value);
+      }
+      saveState();
+      renderTitle();
+      renderProgress();
+    });
+
+    document.addEventListener("compositionstart", event => {
+      if (isNumberTextInput(event.target)) {
+        event.target.dataset.composing = "true";
+      }
+    });
+
+    document.addEventListener("compositionend", event => {
+      const target = event.target;
+      if (!isNumberTextInput(target)) return;
+      delete target.dataset.composing;
+      syncNormalizedNumberInput(target);
+      if (target.matches("[data-stock]")) {
+        state.inventory[target.dataset.stock] = target.value;
+      }
+      if (target.matches("[data-gram]")) {
+        state.grams[target.dataset.gram] = target.value;
+      }
+      saveState();
+      renderTitle();
+      renderProgress();
+    });
+
+    document.addEventListener("change", event => {
+      const target = event.target;
+      if (!isNumberTextInput(target)) return;
+      syncNormalizedNumberInput(target);
+      if (target.matches("[data-stock]")) {
+        state.inventory[target.dataset.stock] = target.value;
+      }
+      if (target.matches("[data-gram]")) {
+        state.grams[target.dataset.gram] = target.value;
       }
       saveState();
       renderTitle();
