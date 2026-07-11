@@ -1160,6 +1160,7 @@
 
   <script>
     const storageKey = "restaurantClosingSheet:v3";
+    const defaultSharedApiUrl = "https://script.google.com/macros/s/AKfycbzzb5D3mMu9B5w5H1lwUzyWpvoDlbPMETBhupG7HBth9N9fWEGxTGyuoX5peURwJVX5VQ/exec";
     const defaultEmployees = ["朱生", "未生", "美生", "その他"];
     const defaultChecks = [
       { id: "trash", label: "ゴミ出し", note: "月曜日：可燃／水曜日：プラ・ペット" },
@@ -1246,7 +1247,8 @@
       dragFloatingCard: null,
       dragOffsetY: 0,
       dragLockedLeft: 0,
-      dragLockedWidth: 0
+      dragLockedWidth: 0,
+      sharedSaveTimer: null
     };
 
     function localDate() {
@@ -1270,7 +1272,7 @@
           parsed.inventory = normalizeInventoryValues(parsed.inventory, parsed.inventoryGroups);
           parsed.grams = normalizeGramValues(parsed.grams, parsed.inventoryGroups);
           parsed.photos = normalizePhotoValues(parsed.photos, parsed.inventoryGroups);
-          parsed.sendUrl = String(parsed.sendUrl || "").trim();
+          parsed.sendUrl = String(parsed.sendUrl || defaultSharedApiUrl).trim();
           return parsed;
         } catch (error) {
           console.warn("Saved state could not be loaded.", error);
@@ -1285,7 +1287,7 @@
         cash: "",
         memo: "",
         sentAt: "",
-        sendUrl: "",
+        sendUrl: defaultSharedApiUrl,
         employees: [...defaultEmployees],
         checkItems: defaultChecks.map(item => ({ ...item })),
         inventoryGroups: cloneInventoryGroups(defaultInventoryGroups),
@@ -1469,6 +1471,111 @@
       state.cash = normalizeNumberInput(elements.cash.value);
       state.memo = elements.memo.value;
       localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function getSharedSettingsPayload() {
+      return {
+        employees: state.employees,
+        checkItems: state.checkItems,
+        inventoryGroups: state.inventoryGroups,
+        sendUrl: state.sendUrl || defaultSharedApiUrl
+      };
+    }
+
+    function getSharedApiUrl() {
+      return String(state.sendUrl || defaultSharedApiUrl).trim();
+    }
+
+    function loadJsonp(url) {
+      return new Promise((resolve, reject) => {
+        const callbackName = `azureCloseWorkSettings${Date.now()}${Math.random().toString(36).slice(2)}`;
+        const separator = url.includes("?") ? "&" : "?";
+        const script = document.createElement("script");
+        const cleanup = () => {
+          delete window[callbackName];
+          script.remove();
+        };
+        window[callbackName] = payload => {
+          cleanup();
+          resolve(payload);
+        };
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("共通設定を読み込めませんでした。"));
+        };
+        script.src = `${url}${separator}action=loadSettings&callback=${callbackName}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    function applySharedSettings(settings) {
+      if (!settings || typeof settings !== "object") return false;
+      const previousChecks = state.checks;
+      const previousCheckedAt = state.checkedAt;
+      const previousInventory = state.inventory;
+      const previousGrams = state.grams;
+      const previousPhotos = state.photos;
+
+      state.employees = normalizeEmployees(settings.employees);
+      state.checkItems = normalizeCheckItems(settings.checkItems);
+      state.inventoryGroups = normalizeInventoryGroups(settings.inventoryGroups);
+      state.sendUrl = String(settings.sendUrl || state.sendUrl || defaultSharedApiUrl).trim();
+      state.checks = normalizeCheckState(previousChecks, state.checkItems);
+      state.checkedAt = normalizeCheckedAt(previousCheckedAt, state.checkItems);
+      state.inventory = normalizeInventoryValues(previousInventory, state.inventoryGroups);
+      state.grams = normalizeGramValues(previousGrams, state.inventoryGroups);
+      state.photos = normalizePhotoValues(previousPhotos, state.inventoryGroups);
+      saveState();
+      render();
+      return true;
+    }
+
+    async function loadSharedSettings() {
+      const url = getSharedApiUrl();
+      if (!url) return;
+      try {
+        const payload = await loadJsonp(url);
+        if (payload && payload.ok && payload.settings && Object.keys(payload.settings).length) {
+          applySharedSettings(payload.settings);
+          elements.status.textContent = "共通設定を読み込みました。";
+          elements.status.className = "status complete";
+        } else if (payload && payload.ok) {
+          await saveSharedSettingsNow();
+        }
+      } catch (error) {
+        console.warn("Shared settings could not be loaded.", error);
+        elements.status.textContent = "共通設定を読み込めませんでした。この端末の設定で表示しています。";
+        elements.status.className = "status warning";
+      }
+    }
+
+    async function saveSharedSettingsNow() {
+      const url = getSharedApiUrl();
+      if (!url) return;
+      try {
+        await fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "saveSettings",
+            settings: getSharedSettingsPayload()
+          })
+        });
+        elements.status.textContent = "共通設定を保存しました。";
+        elements.status.className = "status complete";
+      } catch (error) {
+        console.warn("Shared settings could not be saved.", error);
+        elements.status.textContent = "共通設定の保存に失敗しました。";
+        elements.status.className = "status warning";
+      }
+    }
+
+    function queueSharedSettingsSave() {
+      clearTimeout(settingsUi.sharedSaveTimer);
+      settingsUi.sharedSaveTimer = setTimeout(() => {
+        saveSharedSettingsNow();
+      }, 450);
     }
 
     function resetDailyEntry() {
@@ -1873,13 +1980,16 @@
     }
 
     async function sendToDestination(payload) {
-      const url = String(state.sendUrl || "").trim();
+      const url = getSharedApiUrl();
       if (!url) return { skipped: true };
       await fetch(url, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ...payload,
+          action: "sendLine"
+        })
       });
       return { skipped: false };
     }
@@ -2130,6 +2240,7 @@
       }
       state.sendUrl = url;
       saveState();
+      queueSharedSettingsSave();
       closeDestinationModal();
       elements.status.textContent = state.sendUrl ? "LINEグループ送信先を保存しました。" : "送信先を空にしました。";
       elements.status.className = "status complete";
@@ -2146,6 +2257,7 @@
       renderStaffOptions();
       renderEmployeeList();
       saveState();
+      queueSharedSettingsSave();
       elements.employeeNameInput.value = "";
       elements.employeeNameInput.focus();
     });
@@ -2159,6 +2271,7 @@
       renderStaffOptions();
       renderEmployeeList();
       saveState();
+      queueSharedSettingsSave();
     });
 
     document.querySelector("#checklistSettingsButton").addEventListener("click", () => {
@@ -2183,6 +2296,7 @@
       renderCheckItemList();
       renderProgress();
       saveState();
+      queueSharedSettingsSave();
       const nextLabelInput = elements.checkItemList.querySelector("[data-check-add-label]");
       if (nextLabelInput) nextLabelInput.focus();
     });
@@ -2198,6 +2312,7 @@
       if (noteInput) item.note = noteInput.value.trim();
       renderChecks();
       saveState();
+      queueSharedSettingsSave();
     });
 
     elements.checkItemList.addEventListener("click", event => {
@@ -2218,6 +2333,7 @@
       renderCheckItemList();
       renderProgress();
       saveState();
+      queueSharedSettingsSave();
     });
 
     document.querySelector("#stockGroupForm").addEventListener("submit", event => {
@@ -2231,6 +2347,7 @@
       renderStockItemSettings();
       renderProgress();
       saveState();
+      queueSharedSettingsSave();
       elements.stockGroupNameInput.value = "";
       elements.stockGroupNameInput.focus();
     });
@@ -2258,6 +2375,7 @@
       renderStockItemSettings();
       renderProgress();
       saveState();
+      queueSharedSettingsSave();
       nameInput.value = "";
       unitInput.value = "";
     });
@@ -2275,6 +2393,7 @@
       if (unitInput) context.item.unit = unitInput.value.trim();
       renderInventory();
       saveState();
+      queueSharedSettingsSave();
     });
 
     elements.stockItemList.addEventListener("change", event => {
@@ -2297,6 +2416,7 @@
       renderStockItemSettings();
       renderProgress();
       saveState();
+      queueSharedSettingsSave();
     });
 
     function clearStockDragState() {
@@ -2448,6 +2568,7 @@
           renderInventory();
           renderStockItemSettings();
           saveState();
+          queueSharedSettingsSave();
         }
         clearStockDragState();
         return;
@@ -2459,6 +2580,7 @@
         renderInventory();
         renderStockItemSettings();
         saveState();
+        queueSharedSettingsSave();
       }
       clearStockDragState();
     });
@@ -2501,6 +2623,7 @@
         renderStockItemSettings();
         renderProgress();
         saveState();
+        queueSharedSettingsSave();
         return;
       }
 
@@ -2517,10 +2640,12 @@
       renderStockItemSettings();
       renderProgress();
       saveState();
+      queueSharedSettingsSave();
     });
     document.querySelector("#exportButton").addEventListener("click", exportCsv);
 
     render();
+    loadSharedSettings();
   </script>
 </body>
 </html>
