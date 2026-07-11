@@ -566,11 +566,24 @@
     }
 
     .status {
-      margin-top: 12px;
+      margin: -6px 0 14px;
       min-height: 22px;
       color: var(--muted);
       font-weight: 800;
-      font-size: .9rem;
+      font-size: .92rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .header-status {
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf2;
+    }
+
+    .header-status:empty {
+      display: none;
     }
 
     .status.complete { color: var(--accent-dark); }
@@ -1021,6 +1034,8 @@
       </div>
     </header>
 
+    <div class="status header-status" id="statusText" aria-live="polite"></div>
+
     <div class="layout">
       <aside class="panel sidebar">
         <div class="field-grid">
@@ -1067,7 +1082,6 @@
             <span id="progressBar"></span>
           </div>
         </div>
-        <div class="status" id="statusText" aria-live="polite"></div>
       </aside>
 
       <main class="content">
