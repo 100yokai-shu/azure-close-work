@@ -1030,7 +1030,7 @@
       </div>
       <div class="actions" aria-label="操作">
         <button class="sub-button" id="resetButton" type="button">リセット</button>
-        <button class="primary-button" id="sendButton">送信</button>
+        <button class="primary-button" id="sendButton" type="button">送信</button>
         <div class="menu-wrap">
           <button class="menu-button" id="menuButton" type="button" title="メニュー" aria-label="メニュー" aria-haspopup="menu" aria-expanded="false" aria-controls="menuPanel">
             <span aria-hidden="true"></span>
@@ -2028,6 +2028,7 @@
 
     let lastTouchEndAt = 0;
     document.addEventListener("touchend", event => {
+      if (event.target.closest("button, input, textarea, select, a, label")) return;
       const now = Date.now();
       if (now - lastTouchEndAt <= 320) {
         event.preventDefault();
@@ -2139,7 +2140,12 @@
       renderProgress();
     });
 
-    document.querySelector("#sendButton").addEventListener("click", async () => {
+    const sendButton = document.querySelector("#sendButton");
+    sendButton.addEventListener("click", async () => {
+      if (sendButton.disabled) return;
+      sendButton.disabled = true;
+      elements.status.textContent = "送信中です。";
+      elements.status.className = "status";
       saveState();
       state.sentAt = new Date().toISOString();
       const missing = state.checkItems.filter(item => !state.checks[item.id]).length;
@@ -2158,6 +2164,8 @@
         renderProgress();
         elements.status.textContent = "送信に失敗しました。送信先URLを確認してください。";
         elements.status.className = "status warning";
+      } finally {
+        sendButton.disabled = false;
       }
     });
 
