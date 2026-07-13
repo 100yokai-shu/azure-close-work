@@ -1960,6 +1960,7 @@
       });
       const lineMessage = [
         "A/ZURE CLOSE WORK",
+        `送信日時：${new Date().toLocaleString("ja-JP")}`,
         `営業日：${state.date || ""}`,
         `出勤：${state.staff || ""}`,
         `売上：${state.sales || ""}円`,
@@ -2154,7 +2155,7 @@
         const result = await sendToDestination(payload);
         saveState();
         renderProgress();
-        const baseMessage = result.skipped ? "送信記録を保存しました。" : "送信しました。";
+        const baseMessage = result.skipped ? "送信記録を保存しました。" : "送信リクエストを送信しました。LINE到着を確認してください。";
         elements.status.textContent = missing ? `${baseMessage} 未チェック ${missing} 件があります。` : baseMessage;
         elements.status.className = missing ? "status warning" : "status complete";
       } catch (error) {
