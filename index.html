@@ -1944,7 +1944,10 @@
 
     function buildSubmissionPayload() {
       const doneCount = state.checkItems.filter(item => state.checks[item.id]).length;
-      const missingCount = state.checkItems.length - doneCount;
+      const missingItems = state.checkItems.filter(item => !state.checks[item.id]);
+      const missingLines = missingItems.length
+        ? ["【未チェック】", ...missingItems.map(item => `・${item.label}`)].join("\n")
+        : "未チェック：なし";
       const inventoryLines = state.inventoryGroups.flatMap(group => {
         const itemLines = group.items.map(item => {
           if (isPhotoItem(item)) {
@@ -1967,9 +1970,9 @@
         `客数：${state.guests || ""}名`,
         `レジ内現金：${state.cash || ""}円`,
         `チェック：${doneCount}/${state.checkItems.length} 完了`,
-        missingCount ? `未チェック：${missingCount}件` : "未チェック：なし",
+        missingLines,
         inventoryLines.length ? ["", "【在庫チェックリスト】", ...inventoryLines].join("\n") : "",
-        state.memo ? `メモ：${state.memo}` : ""
+        state.memo ? ["", "【メモ】", state.memo].join("\n") : ""
       ].filter(Boolean).join("\n");
 
       return {
