@@ -612,6 +612,32 @@
     .status.complete { color: var(--accent-dark); }
     .status.warning { color: var(--warn); }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+
+    .tab-button {
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--sub);
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .view[hidden] {
+      display: none;
+    }
+
     .content {
       display: grid;
       gap: 14px;
@@ -644,6 +670,104 @@
       color: var(--accent-dark);
       padding: 5px 9px;
       font-size: .78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .monthly-controls {
+      display: grid;
+      grid-template-columns: minmax(180px, 280px);
+      gap: 10px;
+      margin: 14px;
+    }
+
+    .monthly-entry {
+      display: grid;
+      grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(130px, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin: 0 14px 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf2;
+    }
+
+    .monthly-total {
+      display: grid;
+      gap: 6px;
+      margin: 0 14px 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf2;
+    }
+
+    .monthly-total span {
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 800;
+    }
+
+    .monthly-total strong {
+      color: var(--accent-dark);
+      font-size: clamp(2rem, 8vw, 3.4rem);
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .monthly-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 0 14px 14px;
+    }
+
+    .stat-box {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .stat-box span {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .stat-box strong {
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .monthly-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .monthly-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .monthly-row span {
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .monthly-row strong {
+      font-size: 1.1rem;
       font-weight: 900;
       white-space: nowrap;
     }
@@ -954,6 +1078,10 @@
         grid-template-columns: 1fr;
       }
 
+      .monthly-entry {
+        grid-template-columns: 1fr;
+      }
+
       .item-button {
         grid-template-columns: 34px 1fr;
       }
@@ -1008,7 +1136,13 @@
 
     <div class="status header-status" id="statusText" aria-live="polite"></div>
 
-    <div class="layout">
+    <div class="tabs" role="tablist" aria-label="表示切り替え">
+      <button class="tab-button active" id="dailyTab" type="button" role="tab" aria-selected="true" aria-controls="dailyView">締め入力</button>
+      <button class="tab-button" id="monthlyTab" type="button" role="tab" aria-selected="false" aria-controls="monthlyView">月間集計</button>
+    </div>
+
+    <div class="view" id="dailyView" role="tabpanel" aria-labelledby="dailyTab">
+      <div class="layout">
       <aside class="panel sidebar">
         <div class="field-grid">
           <label>営業日
@@ -1082,6 +1216,51 @@
           </div>
         </section>
       </main>
+      </div>
+    </div>
+
+    <div class="view" id="monthlyView" role="tabpanel" aria-labelledby="monthlyTab" hidden>
+      <section class="panel section">
+        <div class="section-head">
+          <h2>月間集計</h2>
+          <span class="badge" id="monthlyBadge">0日</span>
+        </div>
+        <div class="monthly-controls">
+          <label>対象月
+            <input id="monthlyMonth" type="month">
+          </label>
+        </div>
+        <form class="monthly-entry" id="monthlyEntryForm">
+          <label>日付
+            <input id="monthlyRecordDate" type="date">
+          </label>
+          <label>売上
+            <span class="with-unit">
+              <input id="monthlyRecordSales" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+              <span class="unit">円</span>
+            </span>
+          </label>
+          <label>出勤
+            <input id="monthlyRecordStaff" type="text" autocomplete="off">
+          </label>
+          <button class="primary-button" type="submit">保存</button>
+        </form>
+        <div class="monthly-total">
+          <span>売上累計</span>
+          <strong id="monthlyTotal">0円</strong>
+        </div>
+        <div class="monthly-stats">
+          <div class="stat-box">
+            <span>記録日数</span>
+            <strong id="monthlyDays">0日</strong>
+          </div>
+          <div class="stat-box">
+            <span>1日平均</span>
+            <strong id="monthlyAverage">0円</strong>
+          </div>
+        </div>
+        <div class="monthly-list" id="monthlyList"></div>
+      </section>
     </div>
   </div>
 
@@ -1218,7 +1397,21 @@
       destinationUrlInput: document.querySelector("#destinationUrlInput"),
       checkItemList: document.querySelector("#checkItemList"),
       stockGroupNameInput: document.querySelector("#stockGroupNameInput"),
-      stockItemList: document.querySelector("#stockItemList")
+      stockItemList: document.querySelector("#stockItemList"),
+      dailyTab: document.querySelector("#dailyTab"),
+      monthlyTab: document.querySelector("#monthlyTab"),
+      dailyView: document.querySelector("#dailyView"),
+      monthlyView: document.querySelector("#monthlyView"),
+      monthlyMonth: document.querySelector("#monthlyMonth"),
+      monthlyBadge: document.querySelector("#monthlyBadge"),
+      monthlyTotal: document.querySelector("#monthlyTotal"),
+      monthlyDays: document.querySelector("#monthlyDays"),
+      monthlyAverage: document.querySelector("#monthlyAverage"),
+      monthlyList: document.querySelector("#monthlyList"),
+      monthlyEntryForm: document.querySelector("#monthlyEntryForm"),
+      monthlyRecordDate: document.querySelector("#monthlyRecordDate"),
+      monthlyRecordSales: document.querySelector("#monthlyRecordSales"),
+      monthlyRecordStaff: document.querySelector("#monthlyRecordStaff")
     };
 
     const state = loadState();
@@ -1244,6 +1437,10 @@
       return `${year}-${month}-${day}`;
     }
 
+    function localMonth() {
+      return localDate().slice(0, 7);
+    }
+
     function loadState() {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
@@ -1258,6 +1455,7 @@
           parsed.grams = normalizeGramValues(parsed.grams, parsed.inventoryGroups);
           parsed.photos = normalizePhotoValues(parsed.photos, parsed.inventoryGroups);
           parsed.sendUrl = String(parsed.sendUrl || defaultSharedApiUrl).trim();
+          parsed.monthlyRecords = normalizeMonthlyRecords(parsed.monthlyRecords);
           return parsed;
         } catch (error) {
           console.warn("Saved state could not be loaded.", error);
@@ -1280,7 +1478,8 @@
         checks: Object.fromEntries(defaultChecks.map(item => [item.id, false])),
         inventory: Object.fromEntries(defaultInventoryGroups.flatMap(group => group.items.map(item => [item.id, String(item.value)]))),
         grams: {},
-        photos: {}
+        photos: {},
+        monthlyRecords: []
       };
     }
 
@@ -1352,6 +1551,20 @@
       ])));
     }
 
+    function normalizeMonthlyRecords(value) {
+      const source = Array.isArray(value) ? value : [];
+      return source
+        .map(record => ({
+          date: String(record.date || "").trim(),
+          sales: normalizeNumberInput(record.sales ?? ""),
+          guests: normalizeNumberInput(record.guests ?? ""),
+          cash: normalizeNumberInput(record.cash ?? ""),
+          staff: String(record.staff || "").trim(),
+          sentAt: String(record.sentAt || "").trim()
+        }))
+        .filter(record => /^\d{4}-\d{2}-\d{2}$/.test(record.date));
+    }
+
     function normalizeNumberInput(value) {
       return String(value || "")
         .replace(/[０-９]/g, char => String.fromCharCode(char.charCodeAt(0) - 0xFEE0))
@@ -1369,8 +1582,50 @@
       return normalized;
     }
 
+    function amountNumber(value) {
+      const normalized = normalizeNumberInput(value);
+      const number = Number(normalized);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function formatYen(value) {
+      return `${Math.round(value).toLocaleString("ja-JP")}円`;
+    }
+
+    function formatMonthLabel(value) {
+      const match = String(value || "").match(/^(\d{4})-(\d{2})$/);
+      return match ? `${Number(match[1])}年${Number(match[2])}月` : "";
+    }
+
+    function upsertMonthlyRecord(record) {
+      if (!record || !/^\d{4}-\d{2}-\d{2}$/.test(record.date || "")) return null;
+      const records = normalizeMonthlyRecords(state.monthlyRecords).filter(item => item.date !== record.date);
+      records.push({
+        date: record.date,
+        sales: normalizeNumberInput(record.sales),
+        guests: normalizeNumberInput(record.guests),
+        cash: normalizeNumberInput(record.cash),
+        staff: String(record.staff || "").trim(),
+        sentAt: record.sentAt || new Date().toISOString()
+      });
+      records.sort((a, b) => a.date.localeCompare(b.date));
+      state.monthlyRecords = records;
+      return records.find(item => item.date === record.date) || null;
+    }
+
+    function saveMonthlyRecord() {
+      return upsertMonthlyRecord({
+        date: state.date || localDate(),
+        sales: state.sales,
+        guests: state.guests,
+        cash: state.cash,
+        staff: state.staff || "",
+        sentAt: state.sentAt || new Date().toISOString()
+      });
+    }
+
     function isNumberTextInput(input) {
-      return input.matches("#salesAmount, #guestCount, #cashAmount, [data-stock], [data-gram]");
+      return input.matches("#salesAmount, #guestCount, #cashAmount, #monthlyRecordSales, [data-stock], [data-gram]");
     }
 
     function isPhotoItem(item) {
@@ -1475,12 +1730,17 @@
       return String(state.sendUrl || defaultSharedApiUrl).trim();
     }
 
-    function loadJsonp(url) {
+    function loadJsonp(url, action = "loadSettings") {
       return new Promise((resolve, reject) => {
         const callbackName = `azureCloseWorkSettings${Date.now()}${Math.random().toString(36).slice(2)}`;
         const separator = url.includes("?") ? "&" : "?";
         const script = document.createElement("script");
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error("読み込みがタイムアウトしました。"));
+        }, 8000);
         const cleanup = () => {
+          clearTimeout(timer);
           delete window[callbackName];
           script.remove();
         };
@@ -1492,7 +1752,7 @@
           cleanup();
           reject(new Error("共通設定を読み込めませんでした。"));
         };
-        script.src = `${url}${separator}action=loadSettings&callback=${callbackName}`;
+        script.src = `${url}${separator}action=${encodeURIComponent(action)}&callback=${callbackName}`;
         document.head.appendChild(script);
       });
     }
@@ -1523,7 +1783,7 @@
       const url = getSharedApiUrl();
       if (!url) return;
       try {
-        const payload = await loadJsonp(url);
+        const payload = await loadJsonp(url, "loadSettings");
         if (payload && payload.ok && payload.settings && Object.keys(payload.settings).length) {
           applySharedSettings(payload.settings);
           elements.status.textContent = "共通設定を読み込みました。";
@@ -1535,6 +1795,21 @@
         console.warn("Shared settings could not be loaded.", error);
         elements.status.textContent = "共通設定を読み込めませんでした。この端末の設定で表示しています。";
         elements.status.className = "status warning";
+      }
+    }
+
+    async function loadSharedRecords() {
+      const url = getSharedApiUrl();
+      if (!url) return;
+      try {
+        const payload = await loadJsonp(url, "loadRecords");
+        if (payload && payload.ok && Array.isArray(payload.records)) {
+          state.monthlyRecords = normalizeMonthlyRecords(payload.records);
+          saveState();
+          renderMonthlySummary();
+        }
+      } catch (error) {
+        console.warn("Monthly records could not be loaded.", error);
       }
     }
 
@@ -1558,6 +1833,20 @@
         elements.status.textContent = "共通設定の保存に失敗しました。";
         elements.status.className = "status warning";
       }
+    }
+
+    async function saveSharedMonthlyRecord(record) {
+      const url = getSharedApiUrl();
+      if (!url || !record) return;
+      await fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "saveRecord",
+          record
+        })
+      });
     }
 
     function queueSharedSettingsSave() {
@@ -1792,6 +2081,37 @@
       }
     }
 
+    function renderMonthlySummary() {
+      const month = elements.monthlyMonth.value || String(state.date || localDate()).slice(0, 7) || localMonth();
+      elements.monthlyMonth.value = month;
+      if (!elements.monthlyRecordDate.value) {
+        elements.monthlyRecordDate.value = localDate();
+      }
+      const records = normalizeMonthlyRecords(state.monthlyRecords)
+        .filter(record => record.date.startsWith(`${month}-`))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const total = records.reduce((sum, record) => sum + amountNumber(record.sales), 0);
+      const average = records.length ? total / records.length : 0;
+
+      elements.monthlyBadge.textContent = `${records.length}日`;
+      elements.monthlyTotal.textContent = formatYen(total);
+      elements.monthlyDays.textContent = `${records.length}日`;
+      elements.monthlyAverage.textContent = formatYen(average);
+      elements.monthlyList.innerHTML = records.length ? records.map(record => `
+        <div class="monthly-row">
+          <span>${escapeHtml(record.date)}${record.staff ? `　${escapeHtml(record.staff)}` : ""}</span>
+          <strong>${formatYen(amountNumber(record.sales))}</strong>
+          <button class="small-button" type="button" data-monthly-edit="${escapeHtml(record.date)}">編集</button>
+        </div>
+      `).join("") : `
+        <div class="monthly-row">
+          <span>${escapeHtml(formatMonthLabel(month))}の送信記録はまだありません</span>
+          <strong>0円</strong>
+          <span></span>
+        </div>
+      `;
+    }
+
     function render() {
       renderTitle();
       renderStaffOptions();
@@ -1801,6 +2121,7 @@
       renderCheckItemList();
       renderStockItemSettings();
       renderProgress();
+      renderMonthlySummary();
     }
 
     function escapeHtml(value) {
@@ -2030,8 +2351,10 @@
       const payload = buildSubmissionPayload();
       try {
         const result = await sendToDestination(payload);
+        saveMonthlyRecord();
         saveState();
         renderProgress();
+        renderMonthlySummary();
         const baseMessage = result.skipped ? "送信記録を保存しました。" : "送信リクエストを送信しました。LINE到着を確認してください。";
         elements.status.textContent = missing ? `${baseMessage} 未チェック ${missing} 件があります。` : baseMessage;
         elements.status.className = missing ? "status warning" : "status complete";
@@ -2045,6 +2368,71 @@
       } finally {
         sendButton.disabled = false;
       }
+    });
+
+    function switchView(view) {
+      const isMonthly = view === "monthly";
+      elements.dailyView.hidden = isMonthly;
+      elements.monthlyView.hidden = !isMonthly;
+      elements.dailyTab.classList.toggle("active", !isMonthly);
+      elements.monthlyTab.classList.toggle("active", isMonthly);
+      elements.dailyTab.setAttribute("aria-selected", String(!isMonthly));
+      elements.monthlyTab.setAttribute("aria-selected", String(isMonthly));
+      if (isMonthly) {
+        renderMonthlySummary();
+        loadSharedRecords();
+      }
+    }
+
+    elements.dailyTab.addEventListener("click", () => switchView("daily"));
+    elements.monthlyTab.addEventListener("click", () => switchView("monthly"));
+    elements.monthlyMonth.addEventListener("change", renderMonthlySummary);
+
+    elements.monthlyEntryForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const date = elements.monthlyRecordDate.value;
+      const sales = normalizeNumberInput(elements.monthlyRecordSales.value);
+      if (!date) {
+        elements.status.textContent = "月間集計に保存する日付を入力してください。";
+        elements.status.className = "status warning";
+        return;
+      }
+      if (!sales) {
+        elements.status.textContent = "月間集計に保存する売上を入力してください。";
+        elements.status.className = "status warning";
+        return;
+      }
+      const record = upsertMonthlyRecord({
+        date,
+        sales,
+        staff: elements.monthlyRecordStaff.value,
+        guests: "",
+        cash: "",
+        sentAt: new Date().toISOString()
+      });
+      elements.monthlyMonth.value = date.slice(0, 7);
+      saveState();
+      renderMonthlySummary();
+      try {
+        await saveSharedMonthlyRecord(record);
+        elements.status.textContent = "月間集計に保存しました。";
+        elements.status.className = "status complete";
+      } catch (error) {
+        console.warn("Monthly record could not be shared.", error);
+        elements.status.textContent = "この端末には保存しました。共通保存は次回確認してください。";
+        elements.status.className = "status warning";
+      }
+    });
+
+    elements.monthlyList.addEventListener("click", event => {
+      const editButton = event.target.closest("[data-monthly-edit]");
+      if (!editButton) return;
+      const record = normalizeMonthlyRecords(state.monthlyRecords).find(item => item.date === editButton.dataset.monthlyEdit);
+      if (!record) return;
+      elements.monthlyRecordDate.value = record.date;
+      elements.monthlyRecordSales.value = record.sales;
+      elements.monthlyRecordStaff.value = record.staff || "";
+      elements.monthlyRecordSales.focus();
     });
 
     document.querySelector("#resetButton").addEventListener("click", () => {
@@ -2566,6 +2954,7 @@
 
     render();
     loadSharedSettings();
+    loadSharedRecords();
   </script>
 </body>
 </html>
