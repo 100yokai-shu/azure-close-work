@@ -2413,6 +2413,9 @@
       elements.monthlyMonth.value = date.slice(0, 7);
       saveState();
       renderMonthlySummary();
+      elements.monthlyRecordDate.value = "";
+      elements.monthlyRecordSales.value = "";
+      elements.monthlyRecordStaff.value = "";
       try {
         await saveSharedMonthlyRecord(record);
         elements.status.textContent = "月間集計に保存しました。";
