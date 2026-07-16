@@ -1230,6 +1230,20 @@
             <input id="monthlyMonth" type="month">
           </label>
         </div>
+        <div class="monthly-total">
+          <span>売上累計</span>
+          <strong id="monthlyTotal">0円</strong>
+        </div>
+        <div class="monthly-stats">
+          <div class="stat-box">
+            <span>記録日数</span>
+            <strong id="monthlyDays">0日</strong>
+          </div>
+          <div class="stat-box">
+            <span>1日平均</span>
+            <strong id="monthlyAverage">0円</strong>
+          </div>
+        </div>
         <form class="monthly-entry" id="monthlyEntryForm">
           <label>日付
             <input id="monthlyRecordDate" type="date">
@@ -1245,20 +1259,6 @@
           </label>
           <button class="primary-button" type="submit">保存</button>
         </form>
-        <div class="monthly-total">
-          <span>売上累計</span>
-          <strong id="monthlyTotal">0円</strong>
-        </div>
-        <div class="monthly-stats">
-          <div class="stat-box">
-            <span>記録日数</span>
-            <strong id="monthlyDays">0日</strong>
-          </div>
-          <div class="stat-box">
-            <span>1日平均</span>
-            <strong id="monthlyAverage">0円</strong>
-          </div>
-        </div>
         <div class="monthly-list" id="monthlyList"></div>
       </section>
     </div>
