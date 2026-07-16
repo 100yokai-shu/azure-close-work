@@ -1861,14 +1861,16 @@
         : "未チェック：なし";
       const inventoryLines = state.inventoryGroups.flatMap(group => {
         const itemLines = group.items.map(item => {
-          const value = String(state.inventory[item.id] ?? "").trim() || "未入力";
-          const unit = item.unit ? item.unit : "";
+          const value = String(state.inventory[item.id] ?? "").trim();
           const grams = String(state.grams[item.id] ?? "").trim();
+          if (!value && !grams) return "";
+          const unit = item.unit ? item.unit : "";
           const gramsText = grams ? ` / ${grams}g` : "";
-          return `・${item.name}：${value}${unit}${gramsText}`;
-        });
+          return `・${item.name}：${value}${value ? unit : ""}${gramsText}`;
+        }).filter(Boolean);
         return itemLines.length ? [`【${group.group}】`, ...itemLines] : [];
       });
+      const memoText = String(state.memo ?? "");
       const lineMessage = [
         "A/ZURE CLOSE WORK",
         `送信日時：${new Date().toLocaleString("ja-JP")}`,
@@ -1880,7 +1882,7 @@
         `チェック：${doneCount}/${state.checkItems.length} 完了`,
         missingLines,
         inventoryLines.length ? ["", "【在庫チェックリスト】", ...inventoryLines].join("\n") : "",
-        state.memo ? ["", "【メモ】", state.memo].join("\n") : ""
+        memoText !== "" ? ["", "【メモ】", memoText].join("\n") : ""
       ].filter(Boolean).join("\n");
 
       return {
